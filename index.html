@@ -118,10 +118,23 @@
         .modal-content { position: relative; width: 95%; max-width: 900px; aspect-ratio: 16/9; background: #000; border-radius: 20px; overflow: hidden; box-shadow: 0 0 60px rgba(0,255,127,0.3); }
         #player-container, #ad-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         #player-container { z-index: 1; }
-        #ad-container { z-index: 5; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        
+        /* AD CONTAINER (Unity Reward Layout) */
+        #ad-container { 
+            z-index: 5; background: #000; display: none; 
+            flex-direction: column; align-items: center; justify-content: center; 
+        }
         .ad-timer { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; z-index: 7; }
-        .skip-ad-btn { position: absolute; bottom: 20px; right: 20px; background: #333; color: white; border: 1px solid #555; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: not-allowed; transition: 0.3s; z-index: 7; font-size: 1rem; }
-        .skip-ad-btn.active { background: var(--accent); color: black; cursor: pointer; box-shadow: 0 0 15px rgba(0,255,127,0.5); }
+        .skip-ad-btn { margin-top: 20px; background: #333; color: #aaa; border: 1px solid #555; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: not-allowed; font-size: 0.9rem; }
+        
+        .reward-btn {
+            padding: 15px 30px; background: var(--accent); color: black; 
+            font-weight: bold; border-radius: 12px; font-size: 1.1rem; 
+            border: none; cursor: pointer; box-shadow: 0 0 20px rgba(0,255,127,0.4);
+            transition: transform 0.2s;
+        }
+        .reward-btn:active { transform: scale(0.95); }
+
         .close-modal-btn, .bg-mode-btn { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: 0.2s; }
         .bg-mode-btn { right: 56px; }
         .close-modal-btn:active, .bg-mode-btn:active { transform: scale(1.1); background: var(--accent); color: black; }
@@ -172,7 +185,7 @@
         .help-content { text-align: left; font-size: 0.9rem; line-height: 1.6; color: #ccc; }
         .help-content h3 { color: var(--accent); margin-top: 15px; }
         .animate-in { animation: fadeInUp 0.5s ease forwards; }
-        button, .chip, .nav-item, .video-card { -webkit-user-select: none; user-select: none; }
+        button, .chip, .nav-item, .video-card { -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body>
@@ -236,7 +249,7 @@
                 <p style="color:#aaa;" id="profile-recharge-status"></p>
             </div>
             <div class="toggle-container">
-                <span>💸 Earn Data (Show Ads)</span>
+                <span>💸 Earn Data (Show Unity Ads)</span>
                 <label class="switch"><input type="checkbox" id="earn-data-toggle" checked><span class="slider"></span></label>
             </div>
             <button class="recharge-btn" style="opacity:1;pointer-events:all;background:#333;color:#fff;" id="help-btn">❓ How to Use / Help</button>
@@ -250,12 +263,11 @@
                 <button class="bg-mode-btn" id="bg-mode-btn" title="Minimize Player">⏻</button>
                 <div id="player-container"></div>
                 
-                <!-- Adsterra Native Banner Code -->
+                <!-- UNITY REWARD AD OVERLAY -->
                 <div id="ad-container">
-                    <script async="async" data-cfasync="false" src="https://pl29331641.profitablecpmratenetwork.com/bdef9d6def242e06bad17e396f58087c/invoke.js"></script>
-                    <div id="container-bdef9d6def242e06bad17e396f58087c"></div>
-                    <div class="ad-timer" id="ad-timer">Ad · 15s</div>
-                    <button class="skip-ad-btn" id="skip-ad-btn">Wait...</button>
+                    <h3 style="color:var(--accent); margin-bottom:15px;">Watch Video Ad to Earn MB</h3>
+                    <button class="reward-btn" onclick="playUnityAd()">▶ Play Video Ad</button>
+                    <button class="skip-ad-btn" onclick="skipAd()">Skip Ad (No MB)</button>
                 </div>
                 
                 <div class="loading-spinner" id="loading-spinner"></div>
@@ -280,11 +292,9 @@
                 <h3 style="color:var(--accent);margin-bottom:15px;">❓ Help & Features</h3>
                 <div class="help-content">
                     <p>📺 <b>Videos:</b> Browse and search any content.</p>
-                    <p>💰 <b>Wallet:</b> Watch ads to earn MB. 1000 MB = Free Recharge.</p>
-                    <p>📱 <b>Recharge:</b> After 1000 MB, enter mobile & SIM and request recharge.</p>
-                    <p>⏻ <b>Background Play:</b> While video is playing, tap '⏻' icon to minimize player. Video continues even if you browse other pages.</p>
-                    <p>🔄 <b>Auto‑Play:</b> When a video ends, next one plays automatically.</p>
-                    <p>⚙️ <b>Earn Data Toggle:</b> In Profile, turn off to enjoy videos without ads (no earning).</p>
+                    <p>💰 <b>Wallet:</b> Watch HD Video ads to earn MB. 1000 MB = Free Recharge.</p>
+                    <p>📱 <b>Unity Ads:</b> Ads play through the native Android app for high rewards.</p>
+                    <p>⏻ <b>Background Play:</b> Tap '⏻' to minimize. Auto-play included.</p>
                 </div>
             </div>
         </div>
@@ -302,71 +312,42 @@
     <script>
         (function(){
             const API = 'https://becend-production.up.railway.app/api';
-            const SKIP_SEC = 15, FIRST_AD = 10, REPEAT_AD = 120;
+            const FIRST_AD = 10, REPEAT_AD = 120; // Seconds
 
             let user = null, ytPlayer = null;
-            let adInterval = null, nextAdTimeout = null;
+            let nextAdTimeout = null;
             let isAdActive = false;
             let playlist = [], currentIdx = -1;
             let page = 1, query = 'trending', type = 'home';
             let loading = false, hasMore = true;
             const rendered = new Set();
             let miniActive = false;
+            
             const miniPlayerEl = document.getElementById('mini-player');
             const miniContent = document.getElementById('mini-content');
 
             // DOM refs
-            const authOverlay = document.getElementById('auth-overlay');
-            const authTitle = document.getElementById('auth-title');
-            const authName = document.getElementById('auth-name');
-            const authPassword = document.getElementById('auth-password');
-            const authSubmit = document.getElementById('auth-submit');
-            const toggleAuth = document.getElementById('toggle-auth');
-            const authError = document.getElementById('auth-error');
-            const appContainer = document.getElementById('app-container');
-            const liveCountSpan = document.getElementById('live-count');
-            const pages = document.querySelectorAll('.page');
-            const navItems = document.querySelectorAll('.nav-item[data-page]');
-            const videoGrid = document.getElementById('video-grid');
-            const sentinel = document.getElementById('sentinel');
-            const loadingInd = document.getElementById('loading-indicator');
-            const searchInput = document.getElementById('search-input');
-            const searchBtn = document.getElementById('search-btn');
-            const chips = document.querySelectorAll('.chip');
-            const playerModal = document.getElementById('player-modal');
-            const playerContainer = document.getElementById('player-container');
-            const adContainer = document.getElementById('ad-container');
-            const skipBtn = document.getElementById('skip-ad-btn');
-            const adTimerDisplay = document.getElementById('ad-timer');
-            const loadingSpinner = document.getElementById('loading-spinner');
-            const closePlayerBtn = document.getElementById('close-player');
-            const bgModeBtn = document.getElementById('bg-mode-btn');
-            const earnToggle = document.getElementById('earn-data-toggle');
-            const helpModal = document.getElementById('help-modal');
-            const helpBtn = document.getElementById('help-btn');
-            const walletMbSpan = document.getElementById('wallet-mb');
-            const walletBar = document.getElementById('wallet-bar');
-            const mobileInput = document.getElementById('mobile-input');
-            const simSelect = document.getElementById('sim-select');
-            const rechargeBtn = document.getElementById('recharge-btn');
-            const rechargeStatusDiv = document.getElementById('recharge-status');
-            const profileName = document.getElementById('profile-name');
-            const profileMb = document.getElementById('profile-mb');
-            const profileRechargeStatus = document.getElementById('profile-recharge-status');
+            const authOverlay = document.getElementById('auth-overlay'),
+                  appContainer = document.getElementById('app-container'),
+                  videoGrid = document.getElementById('video-grid'),
+                  playerModal = document.getElementById('player-modal'),
+                  adContainer = document.getElementById('ad-container'),
+                  walletMbSpan = document.getElementById('wallet-mb'),
+                  walletBar = document.getElementById('wallet-bar');
 
-            // Auth
+            // --- AUTH LOGIC ---
             let authMode = 'login';
-            toggleAuth.onclick = () => {
+            document.getElementById('toggle-auth').onclick = () => {
                 authMode = authMode === 'login' ? 'signup' : 'login';
-                authTitle.textContent = authMode === 'login' ? 'Login' : 'Create Account';
-                authSubmit.textContent = authMode === 'login' ? 'Login' : 'Sign Up';
-                toggleAuth.innerHTML = authMode === 'login' ? 'Create New Account' : 'Already have account? <span>Login</span>';
-                authError.style.display = 'none';
+                document.getElementById('auth-title').textContent = authMode === 'login' ? 'Login' : 'Create Account';
+                document.getElementById('auth-submit').textContent = authMode === 'login' ? 'Login' : 'Sign Up';
+                document.getElementById('toggle-auth').innerHTML = authMode === 'login' ? 'Create New Account' : 'Already have account? <span>Login</span>';
             };
 
-            authSubmit.onclick = async () => {
-                const name = authName.value.trim(), pass = authPassword.value.trim();
-                if (!name || !pass) { authError.textContent = 'Fill all fields'; authError.style.display = 'block'; return; }
+            document.getElementById('auth-submit').onclick = async () => {
+                const name = document.getElementById('auth-name').value.trim(), 
+                      pass = document.getElementById('auth-password').value.trim();
+                if (!name || !pass) return alert('Fill all fields');
                 try {
                     const endpoint = authMode === 'login' ? '/login' : '/signup';
                     const res = await fetch(API + endpoint, {
@@ -376,424 +357,188 @@
                     const data = await res.json();
                     if (res.ok) {
                         user = data;
-                        if (user.earnData === undefined) user.earnData = true;
                         localStorage.setItem('auraUser', JSON.stringify(user));
-                        authOverlay.style.display = 'none';
-                        appContainer.style.display = 'flex';
-                        initApp();
-                    } else {
-                        authError.textContent = data.error || 'Error';
-                        authError.style.display = 'block';
-                    }
-                } catch (e) {
-                    authError.textContent = 'Network error';
-                    authError.style.display = 'block';
-                }
+                        location.reload();
+                    } else alert(data.error);
+                } catch (e) { alert('Network Error'); }
             };
 
             window.addEventListener('load', () => {
                 const saved = localStorage.getItem('auraUser');
                 if (saved) {
                     user = JSON.parse(saved);
-                    if (user.earnData === undefined) user.earnData = true;
-                    localStorage.setItem('auraUser', JSON.stringify(user));
                     authOverlay.style.display = 'none';
                     appContainer.style.display = 'flex';
                     initApp();
                 }
             });
 
-            function logout() { localStorage.removeItem('auraUser'); location.reload(); }
-
+            // --- APP LOGIC ---
             async function initApp() {
                 await refreshUser();
-                fetchLiveCount();
-                setInterval(fetchLiveCount, 10000);
                 resetVideos('trending', 'home');
                 setupNav();
-                earnToggle.onchange = toggleEarn;
-                earnToggle.checked = user?.earnData !== false;
-                if (helpBtn) helpBtn.onclick = () => helpModal.classList.add('active');
-                document.getElementById('help-modal').addEventListener('click', (e) => { if (e.target.id === 'help-modal') closeHelp(); });
-                rechargeBtn.onclick = requestRecharge;
-
-                // Keep playing when visibility changes
-                document.addEventListener('visibilitychange', () => {
-                    if (document.hidden && miniActive && ytPlayer && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {}
-                });
+                setInterval(fetchLiveCount, 10000);
             }
 
             async function refreshUser() {
                 if (!user) return;
-                try {
-                    const res = await fetch(`${API}/user/${user.id}`);
-                    if (res.ok) {
-                        user = await res.json();
-                        if (user.earnData === undefined) user.earnData = true;
-                        localStorage.setItem('auraUser', JSON.stringify(user));
-                    }
-                } catch (e) {}
+                const res = await fetch(`${API}/user/${user.id}`);
+                if (res.ok) {
+                    user = await res.json();
+                    localStorage.setItem('auraUser', JSON.stringify(user));
+                }
                 updateUI();
             }
 
-            async function fetchLiveCount() {
-                try {
-                    const res = await fetch(`${API}/user-count`);
-                    const d = await res.json();
-                    liveCountSpan.textContent = d.count;
-                } catch (e) {}
-            }
-
             function updateUI() {
-                if (!user) return;
                 walletMbSpan.textContent = user.mb;
                 walletBar.style.width = (user.mb / 10) + '%';
+                document.getElementById('profile-name').textContent = user.name;
+                document.getElementById('profile-mb').textContent = user.mb;
+                document.getElementById('earn-data-toggle').checked = user.earnData !== false;
+                
                 if (user.mb >= 1000) {
-                    mobileInput.disabled = false;
-                    simSelect.disabled = false;
-                    rechargeBtn.classList.add('enabled');
-                    rechargeBtn.disabled = false;
+                    document.getElementById('mobile-input').disabled = false;
+                    document.getElementById('sim-select').disabled = false;
+                    document.getElementById('recharge-btn').classList.add('enabled');
+                    document.getElementById('recharge-btn').disabled = false;
+                }
+            }
+
+            // --- UNITY ADS BRIDGE ---
+            window.playUnityAd = function() {
+                if (typeof AndroidBridge !== "undefined" && AndroidBridge.showUnityAd) {
+                    AndroidBridge.showUnityAd(); // Calls Kotlin Code
                 } else {
-                    mobileInput.disabled = true;
-                    simSelect.disabled = true;
-                    rechargeBtn.classList.remove('enabled');
-                    rechargeBtn.disabled = true;
+                    alert("Unity Ads require the Auraa Pro Android App!");
                 }
-                if (user.mobile) mobileInput.value = user.mobile;
-                if (user.sim) simSelect.value = user.sim;
-                if (user.rechargeStatus === 'pending') {
-                    rechargeStatusDiv.innerHTML = '<span class="status-badge status-pending">Pending</span>';
-                    profileRechargeStatus.textContent = 'Recharge: Pending';
-                } else if (user.rechargeStatus === 'approved') {
-                    rechargeStatusDiv.innerHTML = '<span class="status-badge status-approved">Success ✅</span>';
-                    profileRechargeStatus.textContent = 'Recharge: Approved';
-                } else {
-                    rechargeStatusDiv.innerHTML = '';
-                    profileRechargeStatus.textContent = '';
-                }
-                profileName.textContent = user.name;
-                profileMb.textContent = user.mb;
-                earnToggle.checked = user.earnData !== false;
-            }
+            };
 
-            async function toggleEarn() {
-                if (!user) return;
-                const newValue = earnToggle.checked;
-                user.earnData = newValue;
-                localStorage.setItem('auraUser', JSON.stringify(user));
-                if (!newValue) clearAdTimers();
-
-                try {
-                    const res = await fetch(`${API}/toggle-earn/${user.id}`, { method: 'POST' });
-                    if (!res.ok) throw new Error((await res.json().catch(()=>{})).error || `Server error ${res.status}`);
-                    const data = await res.json();
-                    user.earnData = data.earnData;
-                    localStorage.setItem('auraUser', JSON.stringify(user));
-                } catch (e) {
-                    user.earnData = !newValue;
-                    localStorage.setItem('auraUser', JSON.stringify(user));
-                    earnToggle.checked = !newValue;
-                    alert(`❌ Could not update setting.\n${e.message}`);
-                }
-            }
-
-            async function requestRecharge() {
-                const mobile = mobileInput.value.trim();
-                const sim = simSelect.value;
-                if (!mobile || !sim) return alert('Enter mobile and SIM');
-                const res = await fetch(`${API}/recharge-request/${user.id}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mobile, sim })
-                });
-                const data = await res.json();
-                if (res.ok) { alert('Request sent!'); refreshUser(); }
-                else alert(data.error || 'Error');
-            }
-
-            function setupNav() {
-                navItems.forEach(n => {
-                    n.onclick = () => {
-                        navItems.forEach(x => x.classList.remove('active'));
-                        n.classList.add('active');
-                        const p = n.dataset.page;
-                        pages.forEach(px => px.classList.remove('active-page'));
-                        document.getElementById(p + '-page').classList.add('active-page');
-                        if (p === 'wallet' || p === 'profile') refreshUser();
-                    };
-                });
-            }
-
-            const io = new IntersectionObserver(entries => {
-                if (entries[0].isIntersecting && !loading && hasMore) loadMore();
-            }, { rootMargin: '100px' });
-            io.observe(sentinel);
-
-            function resetVideos(q, t) {
-                query = q; type = t; page = 1; hasMore = true;
-                rendered.clear();
-                videoGrid.querySelectorAll('.video-card,.no-results').forEach(e => e.remove());
-                if (sentinel && sentinel.parentNode !== videoGrid) videoGrid.appendChild(sentinel);
-                fetchVideos(false);
-            }
-
-            async function fetchVideos(append = false, pageNum = page) {
-                if (loading) return;
-                loading = true;
-                loadingInd.classList.add('show');
-                try {
-                    const res = await fetch(`${API}/videos?q=${encodeURIComponent(query)}&type=${type}&page=${pageNum}`);
-                    const data = await res.json();
-                    if (!append) {
-                        videoGrid.querySelectorAll('.video-card,.no-results').forEach(e => e.remove());
-                        rendered.clear();
-                    }
-                    if (!data.results || data.results.length === 0) {
-                        hasMore = false;
-                        if (!append) videoGrid.insertAdjacentHTML('beforeend', '<div class="no-results">No videos found.</div>');
-                    } else {
-                        data.results.forEach(v => {
-                            if (!rendered.has(v.videoId)) {
-                                rendered.add(v.videoId);
-                                const card = createCard(v);
-                                if (sentinel && sentinel.parentNode !== videoGrid) videoGrid.appendChild(sentinel);
-                                videoGrid.insertBefore(card, sentinel);
-                            }
-                        });
-                        hasMore = data.results.length >= 20;
-                        if (hasMore) page++;
-                    }
-                } catch (e) {
-                    if (!append) videoGrid.insertAdjacentHTML('beforeend', `<div class="no-results">❌ ${e.message}</div>`);
-                    hasMore = false;
-                } finally {
-                    loading = false;
-                    loadingInd.classList.remove('show');
-                }
-            }
-
-            function loadMore() { fetchVideos(true, page); }
-
-            function createCard(v) {
-                const card = document.createElement('div');
-                card.className = 'video-card animate-in';
-                card.onclick = () => playVideo(v.videoId);
-                card.innerHTML = `
-                    <div class="thumbnail-wrapper"><img src="${v.thumbnail}" loading="lazy"><span class="duration-badge">${v.duration}</span></div>
-                    <div class="video-info"><div class="video-title">${v.title}</div><div class="video-channel">${v.author}</div></div>
-                `;
-                return card;
-            }
-
-            function playVideo(videoId) {
-                if (!playlist.includes(videoId)) playlist.push(videoId);
-                currentIdx = playlist.indexOf(videoId);
-                openPlayer(videoId);
-            }
-
-            function playNext() {
-                if (currentIdx < playlist.length - 1) {
-                    currentIdx++;
-                    const id = playlist[currentIdx];
-                    if (miniActive) loadMiniPlayer(id);
-                    else openPlayer(id);
-                } else if (hasMore) {
-                    fetchVideos(true, page).then(() => {
-                        if (currentIdx + 1 < playlist.length) {
-                            currentIdx++;
-                            const id = playlist[currentIdx];
-                            if (miniActive) loadMiniPlayer(id);
-                            else openPlayer(id);
-                        }
-                    });
-                }
-            }
-
-            function loadMiniPlayer(videoId) {
-                if (ytPlayer) ytPlayer.loadVideoById(videoId);
-            }
-
-            function openPlayer(videoId) {
-                playerModal.classList.add('active');
-                loadingSpinner.style.display = 'block';
-                playerContainer.innerHTML = '';
+            // Called by Android Kotlin after ad completion
+            window.rewardUserFromAndroid = async function() {
                 adContainer.style.display = 'none';
-                clearAdTimers();
                 isAdActive = false;
-                if (ytPlayer) { ytPlayer.destroy(); ytPlayer = null; }
-                ytPlayer = new YT.Player(playerContainer, {
-                    height: '100%', width: '100%', videoId,
-                    playerVars: { autoplay: 1, modestbranding: 1, rel: 0, controls: 1, showinfo: 0, iv_load_policy: 3, fs: 1, enablejsapi: 1 },
-                    events: { onReady, onStateChange }
-                });
+                if (ytPlayer) {
+                    ytPlayer.playVideo();
+                    await earnMb();
+                    scheduleAd(REPEAT_AD);
+                }
+            };
+
+            function showAd() {
+                if (!ytPlayer || isAdActive || !user || user.earnData === false) return;
+                ytPlayer.pauseVideo();
+                isAdActive = true;
+                adContainer.style.display = 'flex';
             }
 
-            function onReady() { loadingSpinner.style.display = 'none'; scheduleAd(FIRST_AD); }
-            function onStateChange(e) {
-                if (e.data === YT.PlayerState.ENDED) {
-                    clearAdTimers();
-                    if (!miniActive && !playerModal.classList.contains('active')) return;
-                    playNext();
+            window.skipAd = function() {
+                adContainer.style.display = 'none';
+                isAdActive = false;
+                if (ytPlayer) {
+                    ytPlayer.playVideo();
+                    scheduleAd(REPEAT_AD);
+                }
+            };
+
+            async function earnMb() {
+                const res = await fetch(`${API}/earn-mb/${user.id}`, { method: 'POST' });
+                if (res.ok) {
+                    const d = await res.json();
+                    user.mb = d.mb;
+                    updateUI();
                 }
             }
 
             function scheduleAd(delay) {
-                if (!user || user.earnData === false) return;
                 if (nextAdTimeout) clearTimeout(nextAdTimeout);
                 nextAdTimeout = setTimeout(() => {
-                    if (ytPlayer && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING && !isAdActive && user.earnData) {
-                        showAd();
-                    } else if (ytPlayer && !isAdActive && user.earnData) {
-                        scheduleAd(2);
-                    }
+                    if (ytPlayer && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) showAd();
+                    else scheduleAd(5);
                 }, delay * 1000);
             }
 
-            function showAd() {
-                if (!ytPlayer || isAdActive || !user || !user.earnData) return;
-                ytPlayer.pauseVideo(); 
-                isAdActive = true;
-                
-                adContainer.style.display = 'flex'; 
-                
-                let sec = SKIP_SEC;
-                adTimerDisplay.textContent = `Ad · ${sec}s`;
-                skipBtn.classList.remove('active');
-                skipBtn.textContent = 'Wait...';
-                skipBtn.onclick = null;
-                
-                if (adInterval) clearInterval(adInterval);
-                adInterval = setInterval(() => {
-                    sec--;
-                    adTimerDisplay.textContent = `Ad · ${sec}s`;
-                    if (sec <= 0) {
-                        clearInterval(adInterval);
-                        skipBtn.classList.add('active');
-                        skipBtn.textContent = 'Skip ⏭';
-                        skipBtn.onclick = skipAd;
+            // --- YOUTUBE LOGIC ---
+            function onYouTubeIframeAPIReady() {}
+
+            function openPlayer(videoId) {
+                playerModal.classList.add('active');
+                document.getElementById('loading-spinner').style.display = 'block';
+                if (ytPlayer) ytPlayer.destroy();
+                ytPlayer = new YT.Player('player-container', {
+                    height: '100%', width: '100%', videoId,
+                    playerVars: { autoplay: 1, controls: 1, modestbranding: 1, rel: 0 },
+                    events: { 
+                        onReady: (e) => { 
+                            document.getElementById('loading-spinner').style.display = 'none';
+                            scheduleAd(FIRST_AD);
+                        },
+                        onStateChange: (e) => { if (e.data === YT.PlayerState.ENDED) playNext(); }
                     }
-                }, 1000);
+                });
             }
 
-            async function skipAd() {
-                clearInterval(adInterval);
-                adContainer.style.display = 'none'; 
-                isAdActive = false;
-                
-                if (ytPlayer) {
-                    ytPlayer.playVideo(); 
-                    if (user?.earnData) await earnMb();
-                    scheduleAd(REPEAT_AD);
-                }
+            // --- NAVIGATION & UTILS ---
+            function setupNav() {
+                document.querySelectorAll('.nav-item[data-page]').forEach(n => {
+                    n.onclick = () => {
+                        document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+                        n.classList.add('active');
+                        document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
+                        document.getElementById(n.dataset.page + '-page').classList.add('active-page');
+                        refreshUser();
+                    };
+                });
             }
 
-            async function earnMb() {
-                if (!user) return;
-                const res = await fetch(`${API}/earn-mb/${user.id}`, { method: 'POST' });
-                if (res.ok) { const d = await res.json(); user.mb = d.mb; updateUI(); }
+            function resetVideos(q, t) {
+                query = q; type = t; page = 1; hasMore = true; rendered.clear();
+                videoGrid.innerHTML = '<div id="sentinel" class="sentinel"></div>';
+                fetchVideos();
             }
 
-            function clearAdTimers() {
-                if (adInterval) clearInterval(adInterval);
-                if (nextAdTimeout) clearTimeout(nextAdTimeout);
-                adInterval = nextAdTimeout = null;
+            async function fetchVideos() {
+                if (loading || !hasMore) return;
+                loading = true;
+                try {
+                    const res = await fetch(`${API}/videos?q=${encodeURIComponent(query)}&type=${type}&page=${page}`);
+                    const data = await res.json();
+                    data.results.forEach(v => {
+                        if (!rendered.has(v.videoId)) {
+                            rendered.add(v.videoId);
+                            const card = document.createElement('div');
+                            card.className = 'video-card animate-in';
+                            card.onclick = () => { playlist.push(v.videoId); openPlayer(v.videoId); };
+                            card.innerHTML = `<div class="thumbnail-wrapper"><img src="${v.thumbnail}"><span class="duration-badge">${v.duration}</span></div>
+                                              <div class="video-info"><div class="video-title">${v.title}</div><div class="video-channel">${v.author}</div></div>`;
+                            videoGrid.insertBefore(card, document.getElementById('sentinel'));
+                        }
+                    });
+                    page++;
+                    hasMore = data.results.length > 0;
+                } catch (e) {} finally { loading = false; }
             }
 
-            closePlayerBtn.onclick = () => {
+            // Scroll listener
+            window.addEventListener('scroll', () => {
+                if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) fetchVideos();
+            });
+
+            document.getElementById('search-btn').onclick = () => {
+                const q = document.getElementById('search-input').value;
+                if (q) resetVideos(q, 'search');
+            };
+
+            document.getElementById('close-player').onclick = () => {
                 playerModal.classList.remove('active');
                 if (ytPlayer) ytPlayer.stopVideo();
-                clearAdTimers();
+                if (nextAdTimeout) clearTimeout(nextAdTimeout);
             };
 
-            // Background Mode
-            bgModeBtn.onclick = () => {
-                if (!ytPlayer) return;
-                miniActive = true;
-                miniPlayerEl.style.display = 'flex';
-                const iframe = playerContainer.querySelector('iframe');
-                if (iframe) {
-                    miniContent.innerHTML = '';
-                    miniContent.appendChild(iframe);
-                }
-                playerModal.classList.remove('active');
-                document.getElementById('mini-play-pause').onclick = () => {
-                    if (ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
-                    else ytPlayer.playVideo();
-                };
-                document.getElementById('mini-next').onclick = playNext;
-                document.getElementById('mini-close').onclick = () => {
-                    miniActive = false;
-                    miniPlayerEl.style.display = 'none';
-                    if (ytPlayer) ytPlayer.stopVideo();
-                    playerContainer.innerHTML = '';
-                    miniContent.innerHTML = '';
-                    clearAdTimers();
-                };
-            };
-
-            // Drag Mini Player
-            function startDrag(e) {
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                const rect = miniPlayerEl.getBoundingClientRect();
-                const offsetX = clientX - rect.left;
-                const offsetY = clientY - rect.top;
-
-                function onMove(ev) {
-                    ev.preventDefault();
-                    const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
-                    const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
-                    let newLeft = cx - offsetX;
-                    let newTop = cy - offsetY;
-                    const maxLeft = window.innerWidth - miniPlayerEl.offsetWidth - 10;
-                    const maxTop = window.innerHeight - miniPlayerEl.offsetHeight - 100;
-                    newLeft = Math.max(10, Math.min(newLeft, maxLeft));
-                    newTop = Math.max(10, Math.min(newTop, maxTop));
-                    miniPlayerEl.style.left = newLeft + 'px';
-                    miniPlayerEl.style.top = newTop + 'px';
-                    miniPlayerEl.style.right = 'auto';
-                    miniPlayerEl.style.bottom = 'auto';
-                }
-
-                function onEnd() {
-                    document.removeEventListener('mousemove', onMove);
-                    document.removeEventListener('mouseup', onEnd);
-                    document.removeEventListener('touchmove', onMove);
-                    document.removeEventListener('touchend', onEnd);
-                }
-
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', onEnd);
-                document.addEventListener('touchmove', onMove, { passive: false });
-                document.addEventListener('touchend', onEnd);
-            }
-
-            document.getElementById('drag-handle').addEventListener('mousedown', startDrag);
-            document.getElementById('drag-handle').addEventListener('touchstart', startDrag, { passive: false });
-
-            function closeHelp() { helpModal.classList.remove('active'); }
-
-            searchBtn.onclick = () => {
-                const q = searchInput.value.trim();
-                if (q) { chips.forEach(c => c.classList.remove('active')); resetVideos(q, 'search'); }
-            };
-            searchInput.addEventListener('keypress', e => { if (e.key === 'Enter') searchBtn.click(); });
-            chips.forEach(chip => {
-                chip.onclick = () => {
-                    chips.forEach(c => c.classList.remove('active'));
-                    chip.classList.add('active');
-                    const q = chip.dataset.query;
-                    const t = (q === 'trending') ? 'home' : 'search';
-                    resetVideos(q, t);
-                    searchInput.value = '';
-                };
-            });
-            document.querySelector('.nav-item[data-page="home"]').addEventListener('click', () => {
-                chips.forEach(c => c.classList.remove('active'));
-                document.querySelector('.chip[data-query="trending"]').classList.add('active');
-                resetVideos('trending', 'home');
-                searchInput.value = '';
-            });
         })();
+        function logout() { localStorage.removeItem('auraUser'); location.reload(); }
+        function closeHelp() { document.getElementById('help-modal').classList.remove('active'); }
     </script>
 </body>
 </html>
