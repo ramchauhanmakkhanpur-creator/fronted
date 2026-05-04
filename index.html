@@ -2,104 +2,648 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auraa Pro — Fixed Toggle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Auraa Pro – Mobile Optimized</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
-        :root{--bg:#0a0a0a;--surface:#1a1a1af2;--text:#fff;--muted:#aaa;--accent:#00ff7f;--gradient:linear-gradient(135deg,#004d40,#00e676)}
-        body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding-bottom:70px;overflow-x:hidden}
-        .auth-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column}
-        .auth-card{background:rgba(20,20,20,0.9);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:32px 28px;width:90%;max-width:420px;box-shadow:0 20px 50px rgba(0,255,127,0.15);text-align:center}
-        .auth-card h2{background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:2rem;margin-bottom:20px}
-        .auth-input{width:100%;padding:14px;margin:8px 0;background:#2a2a2a;border:1px solid #444;color:white;border-radius:12px;outline:none;font-size:1rem;transition:all .3s}
-        .auth-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,255,127,0.2)}
-        .auth-btn{width:100%;padding:14px;background:var(--accent);color:#000;font-weight:bold;border:none;border-radius:12px;margin-top:20px;cursor:pointer;font-size:1rem;transition:.3s}
-        .auth-btn:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(0,255,127,0.3)}
-        .auth-switch{margin-top:14px;color:#aaa;font-size:.85rem}
-        .auth-switch span{color:var(--accent);cursor:pointer;font-weight:bold}
-        .auth-error{color:#ff4d4d;margin-top:10px;font-size:.9rem;display:none}
-        .app-container{width:100%;max-width:100%;display:none;flex-direction:column}
-        .top-bar{position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.7);backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.08)}
-        .logo{font-size:1.6rem;font-weight:800;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-        .live-users{font-size:.8rem;color:#ccc;display:flex;align-items:center;gap:6px}
-        .live-dot{width:10px;height:10px;background:var(--accent);border-radius:50%;animation:pulse 1.5s infinite}
-        @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(0,255,127,0.7)}70%{box-shadow:0 0 0 8px rgba(0,255,127,0)}100%{box-shadow:0 0 0 0 rgba(0,255,127,0)}}
-        .search-box{display:flex;align-items:center;background:#222;border-radius:30px;padding:6px 14px;border:1px solid #333;flex:0 1 280px}
-        .search-box input{background:transparent;border:none;outline:none;color:white;font-size:.9rem;width:100%}
-        .search-box button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem}
-        .chips-container{padding:10px 20px;display:flex;gap:10px;overflow-x:auto;scrollbar-width:none}
-        .chip{padding:8px 18px;border-radius:20px;background:rgba(255,255,255,0.06);white-space:nowrap;cursor:pointer;font-size:.85rem;border:1px solid transparent;transition:.3s;color:#aaa}
-        .chip.active,.chip:hover{background:rgba(0,255,127,0.1);color:var(--accent);border-color:var(--accent)}
-        .video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;padding:0 20px 20px}
-        .video-card{background:rgba(30,30,30,0.8);backdrop-filter:blur(12px);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .3s,box-shadow .3s;border:1px solid rgba(255,255,255,0.05)}
-        .video-card:hover{transform:translateY(-6px);box-shadow:0 15px 30px rgba(0,255,127,0.2);border-color:var(--accent)}
-        .thumbnail-wrapper{position:relative;width:100%;aspect-ratio:16/9;background:#000}
-        .thumbnail-wrapper img{width:100%;height:100%;object-fit:cover}
-        .duration-badge{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.8);padding:2px 8px;border-radius:6px;font-size:.75rem}
-        .video-info{padding:10px 14px}
-        .video-title{font-size:.9rem;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-        .video-channel{font-size:.78rem;color:#aaa;margin-top:4px}
-        .sentinel{height:40px;grid-column:1/-1}
-        .loading-indicator{grid-column:1/-1;text-align:center;color:#888;padding:20px;display:none}
-        .loading-indicator.show{display:block}
-        .no-results{grid-column:1/-1;text-align:center;color:#888;padding:40px}
-        .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .3s}
-        .modal-overlay.active{opacity:1;pointer-events:all}
-        .modal-content{position:relative;width:95%;max-width:900px;aspect-ratio:16/9;background:#000;border-radius:20px;overflow:hidden;box-shadow:0 0 60px rgba(0,255,127,0.3)}
-        #player-container,#ad-container{position:absolute;top:0;left:0;width:100%;height:100%}
-        #player-container{z-index:1}
-        #ad-container{z-index:5;background:#000;display:none;flex-direction:column;align-items:flex-end;justify-content:center}
-        #ad-video{width:100%;height:100%;object-fit:contain}
-        .ad-timer{position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.7);padding:4px 14px;border-radius:20px;font-size:.85rem}
-        .skip-ad-btn{position:absolute;bottom:20px;right:20px;background:#333;color:#fff;border:1px solid #555;padding:10px 20px;border-radius:8px;font-weight:bold;cursor:not-allowed;transition:.3s;z-index:6}
-        .skip-ad-btn.active{background:var(--accent);color:#000;cursor:pointer}
-        .close-modal-btn,.bg-mode-btn{position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.6);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:.2s}
-        .bg-mode-btn{right:52px}
-        .close-modal-btn:hover,.bg-mode-btn:hover{transform:scale(1.15);background:var(--accent);color:#000}
-        .loading-spinner{border:4px solid #333;border-top:4px solid var(--accent);border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
-        @keyframes spin{0%{transform:translate(-50%,-50%) rotate(0)}100%{transform:translate(-50%,-50%) rotate(360deg)}}
-        .mini-player{position:fixed;bottom:20px;right:20px;width:160px;background:#111;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.7);z-index:300;display:none;flex-direction:column;border:1px solid rgba(255,255,255,0.15);cursor:move}
-        .mini-player .drag-handle{height:24px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;color:#aaa;font-size:.7rem}
-        .mini-player .mini-content{position:relative;width:100%;aspect-ratio:16/9}
-        .mini-player .mini-content iframe{width:100%;height:100%;border:none}
-        .mini-player .mini-controls{display:flex;justify-content:space-around;padding:6px;background:#1a1a1a}
-        .mini-player .mini-controls button{background:none;border:none;color:white;cursor:pointer;font-size:1rem}
-        .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,20,20,0.9);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-around;padding:10px 0;z-index:150}
-        .nav-item{display:flex;flex-direction:column;align-items:center;color:#888;font-size:.75rem;cursor:pointer;gap:4px;transition:.2s}
-        .nav-item.active{color:var(--accent)}
-        .nav-item span{font-size:1.4rem}
-        .page{padding:20px;display:none;width:100%;max-width:600px;margin:0 auto}
-        .page.active-page{display:block}
-        .progress-box{background:rgba(20,20,20,0.8);border-radius:16px;padding:20px;text-align:center;margin:20px 0}
-        .mb-text{font-size:2rem;font-weight:bold;color:var(--accent)}
-        .bar-bg{width:100%;background:#333;height:10px;border-radius:10px;overflow:hidden;margin:14px 0}
-        .bar-fill{background:var(--gradient);height:100%;width:0%;transition:width .5s;border-radius:10px}
-        .input-group{margin:16px 0}
-        .input-group label{display:block;margin-bottom:6px;font-size:.9rem;color:#ccc}
-        .input-group input,.input-group select{width:100%;padding:12px;background:#2a2a2a;border:1px solid #444;color:white;border-radius:10px;font-size:.95rem}
-        .recharge-btn{width:100%;padding:14px;background:var(--accent);color:#000;font-weight:bold;border:none;border-radius:10px;font-size:1rem;margin-top:10px;opacity:.5;pointer-events:none;transition:.3s}
-        .recharge-btn.enabled{opacity:1;pointer-events:all;box-shadow:0 5px 20px rgba(0,255,127,0.4)}
-        .status-badge{padding:8px 16px;border-radius:20px;font-size:.85rem;font-weight:bold;display:inline-block;margin-top:15px}
-        .status-pending{background:#ffa502;color:#000}
-        .status-approved{background:var(--accent);color:#000}
-        .toggle-container{display:flex;align-items:center;justify-content:space-between;margin:20px 0}
-        .switch{position:relative;display:inline-block;width:48px;height:26px}
-        .switch input{opacity:0;width:0;height:0}
-        .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#555;transition:.4s;border-radius:34px}
-        .slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:white;transition:.4s;border-radius:50%}
-        input:checked+.slider{background:var(--accent)}
-        input:checked+.slider:before{transform:translateX(22px)}
-        .help-content{text-align:left;font-size:.9rem;line-height:1.6;color:#ccc}
-        .help-content h3{color:var(--accent);margin-top:15px}
-        .animate-in{animation:fadeInUp .5s ease forwards}
-        @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        :root {
+            --bg: #0a0a0a;
+            --surface: rgba(20, 20, 20, 0.9);
+            --text: #ffffff;
+            --muted: #aaaaaa;
+            --accent: #00ff7f;
+            --gradient: linear-gradient(135deg, #004d40, #00e676);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow-x: hidden;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: calc(70px + var(--safe-bottom));
+            scroll-behavior: smooth;
+            overscroll-behavior: none;
+        }
+        body {
+            position: relative;
+        }
+
+        /* Auth Overlay */
+        .auth-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+        .auth-card {
+            background: rgba(20,20,20,0.9);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 28px;
+            padding: 32px 28px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 50px rgba(0,255,127,0.15);
+            text-align: center;
+        }
+        .auth-card h2 {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.2rem;
+            margin-bottom: 24px;
+        }
+        .auth-input {
+            width: 100%;
+            padding: 16px;
+            margin: 10px 0;
+            background: #2a2a2a;
+            border: 1.5px solid #444;
+            color: white;
+            border-radius: 14px;
+            outline: none;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .auth-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(0,255,127,0.2);
+        }
+        .auth-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent);
+            color: #000;
+            font-weight: bold;
+            border: none;
+            border-radius: 14px;
+            margin-top: 20px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .auth-btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 0 20px rgba(0,255,127,0.5);
+        }
+        .auth-switch {
+            margin-top: 16px;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        .auth-switch span {
+            color: var(--accent);
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .auth-error {
+            color: #ff4d4d;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        /* App Container */
+        .app-container {
+            width: 100%;
+            max-width: 100%;
+            display: none;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10,10,10,0.8);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .logo {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            white-space: nowrap;
+        }
+        .live-users {
+            font-size: 0.8rem;
+            color: #ccc;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+            margin-right: 12px;
+        }
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0,255,127,0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(0,255,127,0); }
+            100% { box-shadow: 0 0 0 0 rgba(0,255,127,0); }
+        }
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #222;
+            border-radius: 30px;
+            padding: 6px 14px;
+            border: 1px solid #333;
+            flex: 0 1 220px;
+        }
+        .search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: white;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+        .search-box button {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0 4px;
+        }
+        .search-box button:active { color: var(--accent); }
+
+        /* Chips */
+        .chips-container {
+            padding: 10px 20px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .chip {
+            padding: 8px 18px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.07);
+            white-space: nowrap;
+            cursor: pointer;
+            font-size: 0.85rem;
+            border: 1px solid transparent;
+            transition: all 0.3s;
+            color: #aaa;
+        }
+        .chip.active, .chip:active {
+            background: rgba(0,255,127,0.15);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Video Grid */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            padding: 0 16px 20px;
+        }
+        .video-card {
+            background: rgba(30,30,30,0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+        }
+        .video-card:active {
+            transform: scale(0.96);
+            box-shadow: 0 15px 30px rgba(0,255,127,0.3);
+            border-color: var(--accent);
+        }
+        .thumbnail-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+        }
+        .thumbnail-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+        }
+        .duration-badge {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            background: rgba(0,0,0,0.8);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+        }
+        .video-info {
+            padding: 10px 12px;
+        }
+        .video-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            color: white;
+        }
+        .video-channel {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-top: 4px;
+        }
+
+        .sentinel { height: 40px; grid-column: 1/-1; }
+        .loading-indicator { grid-column: 1/-1; text-align: center; color: #888; padding: 20px; display: none; }
+        .loading-indicator.show { display: block; }
+        .no-results { grid-column: 1/-1; text-align: center; color: #888; padding: 40px; }
+
+        /* Player Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .modal-content {
+            position: relative;
+            width: 95%;
+            max-width: 900px;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 60px rgba(0,255,127,0.3);
+        }
+        #player-container, #ad-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+        #player-container { z-index: 1; }
+        #ad-container {
+            z-index: 5;
+            background: #000;
+            display: none;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        #ad-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .ad-timer {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.7);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            z-index: 7;
+        }
+        .skip-ad-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: not-allowed;
+            transition: 0.3s;
+            z-index: 7;
+            font-size: 1rem;
+        }
+        .skip-ad-btn.active {
+            background: var(--accent);
+            color: black;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0,255,127,0.5);
+        }
+        .close-modal-btn, .bg-mode-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.7);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: 0.2s;
+        }
+        .bg-mode-btn { right: 56px; }
+        .close-modal-btn:active, .bg-mode-btn:active {
+            transform: scale(1.1);
+            background: var(--accent);
+            color: black;
+        }
+        .loading-spinner {
+            border: 4px solid #333;
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Mini Player (Background) */
+        .mini-player {
+            position: fixed;
+            bottom: calc(80px + var(--safe-bottom));
+            right: 16px;
+            width: 150px;
+            background: rgba(20,20,20,0.95);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            z-index: 300;
+            display: none;
+            flex-direction: column;
+            border: 1px solid rgba(255,255,255,0.15);
+            backdrop-filter: blur(12px);
+            touch-action: none;
+        }
+        .mini-player .drag-handle {
+            height: 28px;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+            font-size: 0.75rem;
+        }
+        .mini-player .mini-content {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+        }
+        .mini-player .mini-content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            pointer-events: none; /* prevent interaction with iframe while dragging */
+        }
+        .mini-player .mini-controls {
+            display: flex;
+            justify-content: space-around;
+            padding: 6px;
+            background: #1a1a1a;
+        }
+        .mini-player .mini-controls button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 4px 8px;
+        }
+        .mini-player .mini-controls button:active { color: var(--accent); }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(20,20,20,0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 calc(8px + var(--safe-bottom));
+            z-index: 150;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #888;
+            font-size: 0.75rem;
+            cursor: pointer;
+            gap: 4px;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .nav-item.active {
+            color: var(--accent);
+            transform: scale(1.05);
+        }
+        .nav-item span {
+            font-size: 1.4rem;
+        }
+
+        /* Pages */
+        .page {
+            padding: 12px 16px;
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .page.active-page {
+            display: block;
+            animation: fadeInUp 0.4s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Wallet & Profile components */
+        .progress-box {
+            background: rgba(20,20,20,0.8);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .mb-text {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        .bar-bg {
+            width: 100%;
+            background: #333;
+            height: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 14px 0;
+        }
+        .bar-fill {
+            background: var(--gradient);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s;
+            border-radius: 10px;
+        }
+        .input-group { margin: 16px 0; }
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 14px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 12px;
+            font-size: 1rem;
+        }
+        .recharge-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: black;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            margin-top: 10px;
+            opacity: 0.5;
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.2s;
+        }
+        .recharge-btn.enabled {
+            opacity: 1;
+            pointer-events: all;
+            box-shadow: 0 5px 20px rgba(0,255,127,0.4);
+        }
+        .recharge-btn.enabled:active { transform: scale(0.96); }
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 15px;
+        }
+        .status-pending { background: #ffa502; color: black; }
+        .status-approved { background: var(--accent); color: black; }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        .switch { position: relative; display: inline-block; width: 52px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #555;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px; width: 22px;
+            left: 3px; bottom: 3px;
+            background: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background: var(--accent); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .help-content {
+            text-align: left;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #ccc;
+        }
+        .help-content h3 {
+            color: var(--accent);
+            margin-top: 15px;
+        }
+
+        .animate-in { animation: fadeInUp 0.5s ease forwards; }
+
+        /* Prevent text selection */
+        button, .chip, .nav-item, .video-card { -webkit-user-select: none; user-select: none; }
     </style>
 </head>
 <body>
+
+    <!-- Auth Overlay -->
     <div id="auth-overlay" class="auth-overlay">
         <div class="auth-card">
             <h2 id="auth-title">Welcome</h2>
-            <input type="text" id="auth-name" class="auth-input" placeholder="Username">
+            <input type="text" id="auth-name" class="auth-input" placeholder="Username" autocomplete="off">
             <input type="password" id="auth-password" class="auth-input" placeholder="Password">
             <button id="auth-submit" class="auth-btn">Login</button>
             <div class="auth-switch"><span id="toggle-auth">Create New Account</span></div>
@@ -107,15 +651,17 @@
         </div>
     </div>
 
+    <!-- Main App -->
     <div class="app-container" id="app-container">
         <div class="top-bar">
             <div class="logo">Auraa Pro</div>
             <div class="live-users"><span class="live-dot"></span> Live: <span id="live-count">0</span></div>
             <div class="search-box">
-                <input type="text" id="search-input" placeholder="Search...">
+                <input type="text" id="search-input" placeholder="Search..." autocomplete="off">
                 <button id="search-btn">&#128269;</button>
             </div>
         </div>
+
         <div class="chips-container" id="chips-container">
             <div class="chip active" data-query="trending">Trending</div>
             <div class="chip" data-query="music">Music</div>
@@ -125,11 +671,13 @@
             <div class="chip" data-query="sports">Sports</div>
             <div class="chip" data-query="news">News</div>
         </div>
+
         <div id="home-page" class="page active-page">
             <div class="video-grid" id="video-grid"></div>
             <div id="sentinel" class="sentinel"></div>
             <div id="loading-indicator" class="loading-indicator">Loading...</div>
         </div>
+
         <div id="wallet-page" class="page">
             <h2 style="color:var(--accent)">💼 Wallet</h2>
             <div class="progress-box">
@@ -141,6 +689,7 @@
             <button class="recharge-btn" id="recharge-btn" disabled>Request Recharge</button>
             <div id="recharge-status" style="text-align:center;"></div>
         </div>
+
         <div id="profile-page" class="page">
             <h2 style="color:var(--accent)">👤 Profile</h2>
             <div style="background:rgba(20,20,20,0.8);border-radius:16px;padding:20px;text-align:center;">
@@ -156,19 +705,22 @@
             <button class="recharge-btn" style="margin-top:16px;background:#ff4757;" onclick="logout()">Logout</button>
         </div>
 
+        <!-- Player Modal -->
         <div class="modal-overlay" id="player-modal">
             <div class="modal-content">
                 <button class="close-modal-btn" id="close-player">&times;</button>
-                <button class="bg-mode-btn" id="bg-mode-btn" title="Play in Background">⏻</button>
+                <button class="bg-mode-btn" id="bg-mode-btn" title="Minimize Player">⏻</button>
                 <div id="player-container"></div>
                 <div id="ad-container">
-                    <video id="ad-video" muted playsinline></video>
+                    <video id="ad-video" muted playsinline webkit-playsinline></video>
                     <div class="ad-timer" id="ad-timer">Ad · 15s</div>
                     <button class="skip-ad-btn" id="skip-ad-btn">Skip Ad</button>
                 </div>
                 <div class="loading-spinner" id="loading-spinner"></div>
             </div>
         </div>
+
+        <!-- Mini Player -->
         <div id="mini-player" class="mini-player">
             <div class="drag-handle" id="drag-handle">☰ Mini Player</div>
             <div class="mini-content" id="mini-content"></div>
@@ -178,40 +730,45 @@
                 <button id="mini-close" style="color:#ff4757;">✕</button>
             </div>
         </div>
+
+        <!-- Help Modal -->
         <div class="modal-overlay" id="help-modal" style="z-index:400;">
             <div style="background:#1a1a1a;padding:25px;border-radius:20px;max-width:500px;width:90%;position:relative;">
-                <button style="position:absolute;top:10px;right:15px;background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;" onclick="closeHelp()">&times;</button>
-                <h3 style="color:var(--accent)">❓ Help & Features</h3>
+                <button style="position:absolute;top:15px;right:20px;background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;" onclick="closeHelp()">&times;</button>
+                <h3 style="color:var(--accent);margin-bottom:15px;">❓ Help & Features</h3>
                 <div class="help-content">
-                    <p>📺 Videos: Browse and search any content.</p>
-                    <p>💰 Wallet: Watch ads to earn MB. 1000 MB = Free Recharge.</p>
-                    <p>📱 Recharge: After 1000 MB, enter mobile & SIM and request recharge.</p>
-                    <p>⏻ Background Play: While video is playing, tap '⏻' icon to minimize player. Video continues even if you browse other pages.</p>
-                    <p>🔄 Auto‑Play: When a video ends, next one plays automatically.</p>
-                    <p>⚙️ Earn Data Toggle: In Profile, turn off to enjoy videos without ads (no earning).</p>
-                    <p>👤 Profile: Check your balance and manage settings.</p>
+                    <p>📺 <b>Videos:</b> Browse and search any content.</p>
+                    <p>💰 <b>Wallet:</b> Watch ads to earn MB. 1000 MB = Free Recharge.</p>
+                    <p>📱 <b>Recharge:</b> After 1000 MB, enter mobile & SIM and request recharge.</p>
+                    <p>⏻ <b>Background Play:</b> While video is playing, tap '⏻' icon to minimize player. Video continues even if you browse other pages.</p>
+                    <p>🔄 <b>Auto‑Play:</b> When a video ends, next one plays automatically.</p>
+                    <p>⚙️ <b>Earn Data Toggle:</b> In Profile, turn off to enjoy videos without ads (no earning).</p>
                 </div>
             </div>
         </div>
 
+        <!-- Bottom Nav -->
         <div class="bottom-nav">
-            <div class="nav-item active" data-page="home">🏠<br>Home</div>
-            <div class="nav-item" data-page="wallet">💼<br>Wallet</div>
-            <div class="nav-item" data-page="profile">👤<br>Profile</div>
-            <div class="nav-item" onclick="window.open('https://instagram.com/ip_thakur_1')">👑<br>Admin</div>
+            <div class="nav-item active" data-page="home"><span>🏠</span><br>Home</div>
+            <div class="nav-item" data-page="wallet"><span>💼</span><br>Wallet</div>
+            <div class="nav-item" data-page="profile"><span>👤</span><br>Profile</div>
+            <div class="nav-item" onclick="window.open('https://instagram.com/ip_thakur_1')"><span>👑</span><br>Admin</div>
         </div>
     </div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
         (function(){
-            const API = 'https://becend-production.up.railway.app/api';
+            const API = 'http://localhost:5000/api';
             const AD_URL = 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4';
             const SKIP_SEC = 15, FIRST_AD = 10, REPEAT_AD = 120;
 
-            let user = null, ytPlayer = null, adInterval = null, nextAdTimeout = null, isAdActive = false;
+            let user = null, ytPlayer = null;
+            let adInterval = null, nextAdTimeout = null;
+            let isAdActive = false;
             let playlist = [], currentIdx = -1;
-            let page = 1, query = 'trending', type = 'home', loading = false, hasMore = true;
+            let page = 1, query = 'trending', type = 'home';
+            let loading = false, hasMore = true;
             const rendered = new Set();
             let miniActive = false;
             const miniPlayerEl = document.getElementById('mini-player');
@@ -319,6 +876,13 @@
                 if (helpBtn) helpBtn.onclick = () => helpModal.classList.add('active');
                 document.getElementById('help-modal').addEventListener('click', (e) => { if (e.target.id === 'help-modal') closeHelp(); });
                 rechargeBtn.onclick = requestRecharge;
+
+                // Keep playing when visibility changes (only if mini active)
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && miniActive && ytPlayer && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+                        // video keeps playing by default; do nothing
+                    }
+                });
             }
 
             async function refreshUser() {
@@ -326,8 +890,7 @@
                 try {
                     const res = await fetch(`${API}/user/${user.id}`);
                     if (res.ok) {
-                        const data = await res.json();
-                        user = data;
+                        user = await res.json();
                         if (user.earnData === undefined) user.earnData = true;
                         localStorage.setItem('auraUser', JSON.stringify(user));
                     }
@@ -378,26 +941,21 @@
             async function toggleEarn() {
                 if (!user) return;
                 const newValue = earnToggle.checked;
-                // Optimistic update
                 user.earnData = newValue;
                 localStorage.setItem('auraUser', JSON.stringify(user));
                 if (!newValue) clearAdTimers();
 
                 try {
                     const res = await fetch(`${API}/toggle-earn/${user.id}`, { method: 'POST' });
-                    if (!res.ok) {
-                        const errData = await res.json().catch(() => ({}));
-                        throw new Error(errData.error || `Server returned ${res.status}`);
-                    }
+                    if (!res.ok) throw new Error((await res.json().catch(()=>{})).error || `Server error ${res.status}`);
                     const data = await res.json();
                     user.earnData = data.earnData;
                     localStorage.setItem('auraUser', JSON.stringify(user));
                 } catch (e) {
-                    // Revert
                     user.earnData = !newValue;
                     localStorage.setItem('auraUser', JSON.stringify(user));
                     earnToggle.checked = !newValue;
-                    alert(`❌ Could not update setting.\n\nReason: ${e.message}\nPlease try again.`);
+                    alert(`❌ Could not update setting.\n${e.message}`);
                 }
             }
 
@@ -512,7 +1070,9 @@
                 }
             }
 
-            function loadMiniPlayer(videoId) { if (ytPlayer) ytPlayer.loadVideoById(videoId); }
+            function loadMiniPlayer(videoId) {
+                if (ytPlayer) ytPlayer.loadVideoById(videoId);
+            }
 
             function openPlayer(videoId) {
                 playerModal.classList.add('active');
@@ -606,6 +1166,7 @@
                 clearAdTimers();
             };
 
+            // Background Mode
             bgModeBtn.onclick = () => {
                 if (!ytPlayer) return;
                 miniActive = true;
@@ -631,17 +1192,45 @@
                 };
             };
 
-            const drag = document.getElementById('drag-handle');
-            let pos = { x: 0, y: 0 }, dragging = false;
-            drag.addEventListener('mousedown', e => {
-                dragging = true;
-                pos.x = e.clientX - miniPlayerEl.offsetLeft;
-                pos.y = e.clientY - miniPlayerEl.offsetTop;
-                document.addEventListener('mousemove', move);
-                document.addEventListener('mouseup', stop);
-            });
-            function move(e) { miniPlayerEl.style.left = (e.clientX - pos.x) + 'px'; miniPlayerEl.style.top = (e.clientY - pos.y) + 'px'; }
-            function stop() { dragging = false; document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', stop); }
+            // Drag Mini Player (Touch + Mouse)
+            function startDrag(e) {
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const rect = miniPlayerEl.getBoundingClientRect();
+                const offsetX = clientX - rect.left;
+                const offsetY = clientY - rect.top;
+
+                function onMove(ev) {
+                    ev.preventDefault();
+                    const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+                    const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+                    let newLeft = cx - offsetX;
+                    let newTop = cy - offsetY;
+                    const maxLeft = window.innerWidth - miniPlayerEl.offsetWidth - 10;
+                    const maxTop = window.innerHeight - miniPlayerEl.offsetHeight - 100;
+                    newLeft = Math.max(10, Math.min(newLeft, maxLeft));
+                    newTop = Math.max(10, Math.min(newTop, maxTop));
+                    miniPlayerEl.style.left = newLeft + 'px';
+                    miniPlayerEl.style.top = newTop + 'px';
+                    miniPlayerEl.style.right = 'auto';
+                    miniPlayerEl.style.bottom = 'auto';
+                }
+
+                function onEnd() {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onEnd);
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onEnd);
+                }
+
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onEnd);
+                document.addEventListener('touchmove', onMove, { passive: false });
+                document.addEventListener('touchend', onEnd);
+            }
+
+            document.getElementById('drag-handle').addEventListener('mousedown', startDrag);
+            document.getElementById('drag-handle').addEventListener('touchstart', startDrag, { passive: false });
 
             function closeHelp() { helpModal.classList.remove('active'); }
 
