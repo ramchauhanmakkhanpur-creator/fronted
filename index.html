@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name='admaven-placement' content='Bqjs6pjs8'>
     <meta name="theme-color" content="#0a0a0a">
-    <title>Auraa Pro – Shorts & Ad-Free</title>
+    <title>Auraa Pro – Reels & Ad-Free</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
         :root { --bg: #0a0a0a; --surface: rgba(20, 20, 20, 0.9); --text: #ffffff; --muted: #aaaaaa; --accent: #00ff7f; --gradient: linear-gradient(135deg, #004d40, #00e676); --safe-bottom: env(safe-area-inset-bottom, 0px); }
         html, body { height: 100%; width: 100%; overflow-x: hidden; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding-bottom: calc(70px + var(--safe-bottom)); scroll-behavior: smooth; overscroll-behavior: none; }
+        
+        /* Modals & Auth */
         .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; }
         .auth-card { background: rgba(20,20,20,0.9); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.1); border-radius: 28px; padding: 32px 28px; width: 90%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,255,127,0.15); text-align: center; }
         .auth-card h2 { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.2rem; margin-bottom: 24px; }
@@ -20,6 +22,8 @@
         .auth-switch { margin-top: 16px; color: #aaa; font-size: 0.9rem; }
         .auth-switch span { color: var(--accent); cursor: pointer; font-weight: bold; }
         .auth-error { color: #ff4d4d; margin-top: 12px; font-size: 0.9rem; display: none; }
+        
+        /* Layout */
         .app-container { width: 100%; max-width: 100%; display: none; flex-direction: column; flex: 1; }
         .top-bar { position: sticky; top: 0; z-index: 100; background: rgba(10,10,10,0.8); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
         .logo { font-size: 1.6rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -29,32 +33,74 @@
         .search-box { display: flex; align-items: center; background: #222; border-radius: 30px; padding: 6px 14px; border: 1px solid #333; flex: 0 1 220px; }
         .search-box input { background: transparent; border: none; outline: none; color: white; font-size: 0.9rem; width: 100%; user-select: auto; }
         .search-box button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.2rem; padding: 0 4px; }
-        .search-box button:active { color: var(--accent); }
+        
         .chips-container { padding: 10px 20px; display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; }
         .chip { padding: 8px 18px; border-radius: 20px; background: rgba(255,255,255,0.07); white-space: nowrap; cursor: pointer; font-size: 0.85rem; border: 1px solid transparent; transition: all 0.3s; color: #aaa; }
-        .chip.active, .chip:active { background: rgba(0,255,127,0.15); color: var(--accent); border-color: var(--accent); }
+        .chip.active { background: rgba(0,255,127,0.15); color: var(--accent); border-color: var(--accent); }
+        
         .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; padding: 0 16px 20px; }
-        .shorts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; padding: 0 16px 20px; }
-        .video-card { background: rgba(30,30,30,0.8); backdrop-filter: blur(12px); border-radius: 16px; overflow: hidden; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; border: 1px solid rgba(255,255,255,0.05); }
-        .video-card:active { transform: scale(0.96); box-shadow: 0 15px 30px rgba(0,255,127,0.3); border-color: var(--accent); }
+        .shorts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; padding: 0 16px 20px; }
+        .video-card { background: rgba(30,30,30,0.8); backdrop-filter: blur(12px); border-radius: 16px; overflow: hidden; cursor: pointer; transition: transform 0.3s; border: 1px solid rgba(255,255,255,0.05); }
+        .video-card:active { transform: scale(0.96); border-color: var(--accent); }
         .thumbnail-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; }
+        .shorts-grid .thumbnail-wrapper { aspect-ratio: 9/16; } /* Make shorts thumbnails vertical */
         .thumbnail-wrapper img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
         .duration-badge { position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; }
         .video-info { padding: 10px 12px; }
         .video-title { font-size: 0.9rem; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: white; }
         .video-channel { font-size: 0.8rem; color: #aaa; margin-top: 4px; }
+        
         .sentinel { height: 40px; grid-column: 1/-1; }
         .loading-indicator { grid-column: 1/-1; text-align: center; color: #888; padding: 20px; display: none; }
         .loading-indicator.show { display: block; }
         .no-results { grid-column: 1/-1; text-align: center; color: #888; padding: 40px; }
+
+        /* General Video Player Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .modal-overlay.active { opacity: 1; pointer-events: all; }
         .modal-content { position: relative; width: 95%; max-width: 900px; aspect-ratio: 16/9; background: #000; border-radius: 20px; overflow: hidden; box-shadow: 0 0 60px rgba(0,255,127,0.3); }
         #player-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         .back-btn { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: 0.2s; }
-        .back-btn:active { background: var(--accent); color: black; }
+        
+        /* ========================================= */
+        /* INSTAGRAM REELS VIEWER (Scroll Snap UI)   */
+        /* ========================================= */
+        .reels-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: #000; z-index: 9000; display: none;
+            overflow-y: scroll; scroll-snap-type: y mandatory;
+        }
+        .reels-modal.active { display: block; }
+        .reels-modal::-webkit-scrollbar { display: none; } /* Hide scrollbar for clean look */
+        
+        .reel-item {
+            width: 100%; height: 100vh; scroll-snap-align: start;
+            position: relative; background: #111;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
+        }
+        
+        .reels-close {
+            position: fixed; top: env(safe-area-inset-top, 20px); left: 20px; z-index: 9100;
+            background: rgba(0,0,0,0.6); color: white; border: none; backdrop-filter: blur(5px);
+            width: 45px; height: 45px; border-radius: 50%; font-size: 1.5rem;
+            display: none; cursor: pointer; align-items: center; justify-content: center;
+        }
+        .reels-close.active { display: flex; }
+
+        .reel-overlay {
+            position: absolute; bottom: calc(20px + var(--safe-bottom)); left: 20px; right: 70px;
+            z-index: 5; pointer-events: none;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            padding: 20px 10px 10px 0; border-radius: 10px;
+        }
+        .reel-title { color: #fff; font-size: 1rem; font-weight: bold; margin-bottom: 6px; text-shadow: 1px 1px 3px #000; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .reel-author { color: var(--accent); font-size: 0.9rem; text-shadow: 1px 1px 3px #000; font-weight: bold; }
+        /* ========================================= */
+
         .loading-spinner { border: 4px solid #333; border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2; }
         @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(20,20,20,0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; padding: 8px 0 calc(8px + var(--safe-bottom)); z-index: 150; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; font-size: 0.75rem; cursor: pointer; gap: 4px; transition: color 0.2s, transform 0.2s; }
         .nav-item.active { color: var(--accent); transform: scale(1.05); }
@@ -62,6 +108,7 @@
         .page { padding: 12px 16px; display: none; width: 100%; max-width: 600px; margin: 0 auto; }
         .page.active-page { display: block; animation: fadeInUp 0.4s ease; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
         .progress-box { background: rgba(20,20,20,0.8); border-radius: 16px; padding: 20px; text-align: center; margin: 20px 0; }
         .mb-text { font-size: 2rem; font-weight: bold; color: var(--accent); }
         .bar-bg { width: 100%; background: #333; height: 10px; border-radius: 10px; overflow: hidden; margin: 14px 0; }
@@ -77,8 +124,6 @@
         .status-approved { background: var(--accent); color: black; }
         .help-content { text-align: left; font-size: 0.9rem; line-height: 1.6; color: #ccc; }
         .help-content h3 { color: var(--accent); margin-top: 15px; }
-        .animate-in { animation: fadeInUp 0.5s ease forwards; }
-        button, .chip, .nav-item, .video-card { user-select: none; }
     </style>
 </head>
 <body>
@@ -95,6 +140,7 @@
         </div>
     </div>
 
+    <!-- Main App UI -->
     <div class="app-container" id="app-container">
         <div class="top-bar">
             <div class="logo">Auraa Pro</div>
@@ -115,19 +161,17 @@
             <div class="chip" data-query="news">News</div>
         </div>
 
-        <!-- Home Page (FIXED SENTINEL NESTING) -->
+        <!-- Home Page -->
         <div id="home-page" class="page active-page">
             <div class="video-grid" id="video-grid">
-                <!-- Sentinel inside the grid so insertBefore works -->
                 <div id="sentinel" class="sentinel"></div>
             </div>
             <div id="loading-indicator" class="loading-indicator">Loading...</div>
         </div>
 
-        <!-- Shorts Page (FIXED SENTINEL NESTING) -->
+        <!-- Shorts Page (Grid view before clicking) -->
         <div id="shorts-page" class="page">
             <div class="shorts-grid" id="shorts-grid">
-                <!-- Sentinel inside the grid so insertBefore works -->
                 <div id="shorts-sentinel" class="sentinel"></div>
             </div>
             <div id="shorts-loading-indicator" class="loading-indicator">Loading shorts...</div>
@@ -158,7 +202,7 @@
             <button class="recharge-btn" style="margin-top:16px;background:#ff4757;" onclick="logout()">Logout</button>
         </div>
 
-        <!-- Player Modal -->
+        <!-- General Video Player Modal (For Home Videos) -->
         <div class="modal-overlay" id="player-modal">
             <div class="modal-content">
                 <button class="back-btn" id="back-btn">←</button>
@@ -167,6 +211,10 @@
             </div>
         </div>
 
+        <!-- Instagram Style REELS VIEWER (For Shorts) -->
+        <div id="reels-modal" class="reels-modal"></div>
+        <button id="reels-close" class="reels-close">←</button>
+
         <!-- Help Modal -->
         <div class="modal-overlay" id="help-modal" style="z-index:400;">
             <div style="background:#1a1a1a;padding:25px;border-radius:20px;max-width:500px;width:90%;position:relative;">
@@ -174,10 +222,8 @@
                 <h3 style="color:var(--accent);margin-bottom:15px;">❓ Help & Features</h3>
                 <div class="help-content">
                     <p>📺 <b>Videos:</b> Browse and search any content.</p>
-                    <p>💰 <b>Wallet:</b> Earn MB by watching videos (coming soon). 1000 MB = Free Recharge.</p>
-                    <p>📱 <b>Recharge:</b> After 1000 MB, enter mobile & SIM and request recharge.</p>
-                    <p>🔄 <b>Auto‑Play:</b> When a video ends, next one plays automatically.</p>
-                    <p>🎬 <b>Shorts:</b> Watch trending shorts with infinite scroll.</p>
+                    <p>💰 <b>Wallet:</b> Earn MB by watching videos. 1000 MB = Free Recharge.</p>
+                    <p>🎬 <b>Reels:</b> Swipe up/down to watch infinite shorts, just like Instagram.</p>
                 </div>
             </div>
         </div>
@@ -187,11 +233,14 @@
             <div class="nav-item" data-page="shorts"><span>🎬</span><br>Shorts</div>
             <div class="nav-item" data-page="wallet"><span>💼</span><br>Wallet</div>
             <div class="nav-item" data-page="profile"><span>👤</span><br>Profile</div>
+            <!-- Admin link -->
             <div class="nav-item" onclick="window.open('https://instagram.com/ip_thakur_1')"><span>👑</span><br>Admin</div>
         </div>
     </div>
 
+    <!-- YouTube IFrame API -->
     <script src="https://www.youtube.com/iframe_api"></script>
+    
     <script>
         (function(){
             const API = 'https://becend-production.up.railway.app/api';  
@@ -203,55 +252,34 @@
             let shortsLoading = false, shortsHasMore = true;
             const homeRendered = new Set();
             const shortsRendered = new Set();
+            
+            // Array to store all loaded shorts data for the Swiper
+            let currentShortsList = [];
 
-            const authOverlay = document.getElementById('auth-overlay');
-            const authTitle = document.getElementById('auth-title');
-            const authName = document.getElementById('auth-name');
-            const authPassword = document.getElementById('auth-password');
-            const authSubmit = document.getElementById('auth-submit');
-            const toggleAuth = document.getElementById('toggle-auth');
-            const authError = document.getElementById('auth-error');
+            // DOM refs
             const appContainer = document.getElementById('app-container');
-            const liveCountSpan = document.getElementById('live-count');
-            const pages = document.querySelectorAll('.page');
-            const navItems = document.querySelectorAll('.nav-item[data-page]');
             const homeGrid = document.getElementById('video-grid');
             const homeSentinel = document.getElementById('sentinel');
-            const homeLoadingInd = document.getElementById('loading-indicator');
-            const searchInput = document.getElementById('search-input');
-            const searchBtn = document.getElementById('search-btn');
-            const chips = document.querySelectorAll('.chip');
             const shortsGrid = document.getElementById('shorts-grid');
             const shortsSentinel = document.getElementById('shorts-sentinel');
-            const shortsLoadingInd = document.getElementById('shorts-loading-indicator');
-            const playerModal = document.getElementById('player-modal');
-            const playerContainer = document.getElementById('player-container');
-            const loadingSpinner = document.getElementById('loading-spinner');
-            const backBtn = document.getElementById('back-btn');
-            const helpModal = document.getElementById('help-modal');
-            const helpBtn = document.getElementById('help-btn');
-            const walletMbSpan = document.getElementById('wallet-mb');
-            const walletBar = document.getElementById('wallet-bar');
-            const mobileInput = document.getElementById('mobile-input');
-            const simSelect = document.getElementById('sim-select');
-            const rechargeBtn = document.getElementById('recharge-btn');
-            const rechargeStatusDiv = document.getElementById('recharge-status');
-            const profileName = document.getElementById('profile-name');
-            const profileMb = document.getElementById('profile-mb');
-            const profileRechargeStatus = document.getElementById('profile-recharge-status');
+            const reelsModal = document.getElementById('reels-modal');
+            const reelsCloseBtn = document.getElementById('reels-close');
 
+            // --- AUTH LOGIC ---
             let authMode = 'login';
-            toggleAuth.onclick = () => {
+            document.getElementById('toggle-auth').onclick = () => {
                 authMode = authMode === 'login' ? 'signup' : 'login';
-                authTitle.textContent = authMode === 'login' ? 'Login' : 'Create Account';
-                authSubmit.textContent = authMode === 'login' ? 'Login' : 'Sign Up';
-                toggleAuth.innerHTML = authMode === 'login' ? 'Create New Account' : 'Already have account? <span>Login</span>';
-                authError.style.display = 'none';
+                document.getElementById('auth-title').textContent = authMode === 'login' ? 'Login' : 'Create Account';
+                document.getElementById('auth-submit').textContent = authMode === 'login' ? 'Login' : 'Sign Up';
+                document.getElementById('toggle-auth').innerHTML = authMode === 'login' ? 'Create New Account' : 'Already have account? <span>Login</span>';
+                document.getElementById('auth-error').style.display = 'none';
             };
 
-            authSubmit.onclick = async () => {
-                const name = authName.value.trim(), pass = authPassword.value.trim();
-                if (!name || !pass) { authError.textContent = 'Fill all fields'; authError.style.display = 'block'; return; }
+            document.getElementById('auth-submit').onclick = async () => {
+                const name = document.getElementById('auth-name').value.trim();
+                const pass = document.getElementById('auth-password').value.trim();
+                const authErr = document.getElementById('auth-error');
+                if (!name || !pass) { authErr.textContent = 'Fill all fields'; authErr.style.display = 'block'; return; }
                 try {
                     const endpoint = authMode === 'login' ? '/login' : '/signup';
                     const res = await fetch(API + endpoint, {
@@ -262,103 +290,39 @@
                     if (res.ok) {
                         user = data;
                         localStorage.setItem('auraUser', JSON.stringify(user));
-                        authOverlay.style.display = 'none';
+                        document.getElementById('auth-overlay').style.display = 'none';
                         appContainer.style.display = 'flex';
                         initApp();
                     } else {
-                        authError.textContent = data.error || 'Error';
-                        authError.style.display = 'block';
+                        authErr.textContent = data.error || 'Error';
+                        authErr.style.display = 'block';
                     }
-                } catch (e) { authError.textContent = 'Network error (Backend Down?)'; authError.style.display = 'block'; }
+                } catch (e) { authErr.textContent = 'Network error (Backend Down?)'; authErr.style.display = 'block'; }
             };
 
             window.addEventListener('load', () => {
                 const saved = localStorage.getItem('auraUser');
                 if (saved) {
                     user = JSON.parse(saved);
-                    authOverlay.style.display = 'none';
+                    document.getElementById('auth-overlay').style.display = 'none';
                     appContainer.style.display = 'flex';
                     initApp();
                 }
             });
 
             window.logout = function() { localStorage.removeItem('auraUser'); location.reload(); }
-            window.closeHelp = function() { helpModal.classList.remove('active'); }
+            window.closeHelp = function() { document.getElementById('help-modal').classList.remove('active'); }
 
             async function initApp() {
-                await refreshUser();
-                fetchLiveCount();
-                setInterval(fetchLiveCount, 10000);
                 loadHome('trending', 'home');
                 loadShorts();
                 setupNav();
-                if (helpBtn) helpBtn.onclick = () => helpModal.classList.add('active');
-                document.getElementById('help-modal').addEventListener('click', (e) => { if (e.target.id === 'help-modal') closeHelp(); });
-                rechargeBtn.onclick = requestRecharge;
             }
 
-            async function refreshUser() {
-                if (!user) return;
-                try {
-                    const res = await fetch(`${API}/user/${user.id}`);
-                    if (res.ok) {
-                        user = await res.json();
-                        localStorage.setItem('auraUser', JSON.stringify(user));
-                    }
-                } catch (e) {}
-                updateUI();
-            }
-
-            async function fetchLiveCount() {
-                try { const res = await fetch(`${API}/user-count`); const d = await res.json(); liveCountSpan.textContent = d.count; } catch (e) {}
-            }
-
-            function updateUI() {
-                if (!user) return;
-                walletMbSpan.textContent = user.mb;
-                walletBar.style.width = Math.min((user.mb / 10), 100) + '%';
-                if (user.mb >= 1000) {
-                    mobileInput.disabled = false;
-                    simSelect.disabled = false;
-                    rechargeBtn.classList.add('enabled');
-                    rechargeBtn.disabled = false;
-                } else {
-                    mobileInput.disabled = true;
-                    simSelect.disabled = true;
-                    rechargeBtn.classList.remove('enabled');
-                    rechargeBtn.disabled = true;
-                }
-                if (user.mobile) mobileInput.value = user.mobile;
-                if (user.sim) simSelect.value = user.sim;
-                
-                if (user.rechargeStatus === 'pending') {
-                    rechargeStatusDiv.innerHTML = '<span class="status-badge status-pending">Pending</span>';
-                    profileRechargeStatus.textContent = 'Recharge: Pending';
-                } else if (user.rechargeStatus === 'approved') {
-                    rechargeStatusDiv.innerHTML = '<span class="status-badge status-approved">Success ✅</span>';
-                    profileRechargeStatus.textContent = 'Recharge: Approved';
-                } else {
-                    rechargeStatusDiv.innerHTML = '';
-                    profileRechargeStatus.textContent = '';
-                }
-                profileName.textContent = user.name;
-                profileMb.textContent = user.mb;
-            }
-
-            async function requestRecharge() {
-                const mobile = mobileInput.value.trim();
-                const sim = simSelect.value;
-                if (!mobile || !sim) return alert('Enter mobile and SIM');
-                const res = await fetch(`${API}/recharge-request/${user.id}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mobile, sim })
-                });
-                const data = await res.json();
-                if (res.ok) { alert('Request sent!'); refreshUser(); }
-                else alert(data.error || 'Error');
-            }
-
+            // --- NAVIGATION ---
             function setupNav() {
+                const navItems = document.querySelectorAll('.nav-item[data-page]');
+                const pages = document.querySelectorAll('.page');
                 navItems.forEach(n => {
                     n.onclick = () => {
                         if(n.getAttribute('data-page') == null) return;
@@ -367,11 +331,13 @@
                         const p = n.dataset.page;
                         pages.forEach(px => px.classList.remove('active-page'));
                         document.getElementById(p + '-page').classList.add('active-page');
-                        if (p === 'wallet' || p === 'profile') refreshUser();
+                        // Close reels if open when navigating
+                        closeReelsViewer();
                     };
                 });
             }
 
+            // --- INFINITE SCROLL OBSERVERS ---
             const homeObserver = new IntersectionObserver(entries => {
                 if (entries[0].isIntersecting && !homeLoading && homeHasMore) loadMoreHome();
             }, { rootMargin: '100px' });
@@ -382,6 +348,7 @@
             }, { rootMargin: '100px' });
             shortsObserver.observe(shortsSentinel);
 
+            // --- HOME VIDEOS LOGIC ---
             function loadHome(q, t) {
                 homeQuery = q; homeType = t; homePage = 1; homeHasMore = true;
                 homeRendered.clear();
@@ -392,7 +359,7 @@
             async function fetchHomeVideos(append = false) {
                 if (homeLoading) return;
                 homeLoading = true;
-                homeLoadingInd.classList.add('show');
+                document.getElementById('loading-indicator').classList.add('show');
                 try {
                     const res = await fetch(`${API}/videos?q=${encodeURIComponent(homeQuery)}&type=${homeType}&page=${homePage}`);
                     const data = await res.json();
@@ -403,7 +370,7 @@
                     }
                     if (!data.results || data.results.length === 0) {
                         homeHasMore = false;
-                        if (!append) homeGrid.insertAdjacentHTML('beforeend', '<div class="no-results">No videos found. Server might be rate limited.</div>');
+                        if (!append) homeGrid.insertAdjacentHTML('beforeend', '<div class="no-results">No videos found.</div>');
                     } else {
                         data.results.forEach(v => {
                             if (!homeRendered.has(v.videoId)) {
@@ -416,19 +383,20 @@
                         if (homeHasMore) homePage++;
                     }
                 } catch (e) {
-                    if (!append) homeGrid.insertAdjacentHTML('beforeend', `<div class="no-results">❌ ${e.message}</div>`);
+                    if (!append) homeGrid.insertAdjacentHTML('beforeend', `<div class="no-results">❌ Error loading</div>`);
                     homeHasMore = false;
                 } finally {
                     homeLoading = false;
-                    homeLoadingInd.classList.remove('show');
+                    document.getElementById('loading-indicator').classList.remove('show');
                 }
             }
-
             function loadMoreHome() { fetchHomeVideos(true); }
 
+            // --- SHORTS VIDEOS LOGIC ---
             function loadShorts() {
                 shortsQuery = 'shorts'; shortsType = 'shorts'; shortsPage = 1; shortsHasMore = true;
                 shortsRendered.clear();
+                currentShortsList = []; // Reset shorts array
                 shortsGrid.querySelectorAll('.video-card,.no-results').forEach(e => e.remove());
                 fetchShortsVideos(false);
             }
@@ -436,7 +404,7 @@
             async function fetchShortsVideos(append = false) {
                 if (shortsLoading) return;
                 shortsLoading = true;
-                shortsLoadingInd.classList.add('show');
+                document.getElementById('shorts-loading-indicator').classList.add('show');
                 try {
                     const res = await fetch(`${API}/videos?q=shorts&type=shorts&page=${shortsPage}`);
                     const data = await res.json();
@@ -444,6 +412,7 @@
                     if (!append) {
                         shortsGrid.querySelectorAll('.video-card,.no-results').forEach(e => e.remove());
                         shortsRendered.clear();
+                        currentShortsList = [];
                     }
                     if (!data.results || data.results.length === 0) {
                         shortsHasMore = false;
@@ -452,28 +421,43 @@
                         data.results.forEach(v => {
                             if (!shortsRendered.has(v.videoId)) {
                                 shortsRendered.add(v.videoId);
-                                const card = createCard(v, 'shorts');
+                                
+                                const currentIndex = currentShortsList.length;
+                                currentShortsList.push(v); // Save to array for reels
+                                
+                                const card = createCard(v, 'shorts', currentIndex);
                                 shortsGrid.insertBefore(card, shortsSentinel);
+                                
+                                // If Reels viewer is currently active, dynamically add new shorts to it
+                                if (reelsModal.classList.contains('active')) {
+                                    appendReelItem(v, currentIndex);
+                                }
                             }
                         });
                         shortsHasMore = data.results.length >= 10;
                         if (shortsHasMore) shortsPage++;
                     }
                 } catch (e) {
-                    if (!append) shortsGrid.insertAdjacentHTML('beforeend', `<div class="no-results">❌ ${e.message}</div>`);
+                    if (!append) shortsGrid.insertAdjacentHTML('beforeend', `<div class="no-results">❌ Error loading</div>`);
                     shortsHasMore = false;
                 } finally {
                     shortsLoading = false;
-                    shortsLoadingInd.classList.remove('show');
+                    document.getElementById('shorts-loading-indicator').classList.remove('show');
                 }
             }
-
             function loadMoreShorts() { fetchShortsVideos(true); }
 
-            function createCard(v, pageType) {
+            // --- UI CREATION ---
+            function createCard(v, pageType, index = 0) {
                 const card = document.createElement('div');
                 card.className = 'video-card animate-in';
-                card.onclick = () => openPlayer(v.videoId);
+                card.onclick = () => {
+                    if(pageType === 'shorts') {
+                        openReelsViewer(index); // Open Instagram style UI
+                    } else {
+                        openPlayer(v.videoId); // Open standard YT UI
+                    }
+                };
                 card.innerHTML = `
                     <div class="thumbnail-wrapper"><img src="${v.thumbnail}" loading="lazy"><span class="duration-badge">${v.duration || '0:00'}</span></div>
                     <div class="video-info"><div class="video-title">${v.title}</div><div class="video-channel">${v.author}</div></div>
@@ -481,58 +465,170 @@
                 return card;
             }
 
-            function openPlayer(videoId) {
-                playerModal.classList.add('active');
-                loadingSpinner.style.display = 'block';
-                playerContainer.innerHTML = '';
-                if (ytPlayer) { ytPlayer.destroy(); ytPlayer = null; }
-                
-                ytPlayer = new YT.Player(playerContainer, {
-                    height: '100%', width: '100%', videoId,
-                    playerVars: { autoplay: 1, modestbranding: 1, rel: 0, controls: 1, showinfo: 0, iv_load_policy: 3, fs: 1, enablejsapi: 1 },
-                    events: {
-                        onReady: () => { loadingSpinner.style.display = 'none'; },
-                        onStateChange: (e) => {
-                            if (e.data === YT.PlayerState.ENDED) {
-                                // Auto-play next logic here
-                            }
+            // =========================================
+            // INSTAGRAM REELS (SCROLLING SHORTS) LOGIC
+            // =========================================
+            let reelPlayers = {}; // Keep track of active YT iframes
+            
+            // Intersection Observer detects which reel is currently visible on screen
+            const reelObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const index = parseInt(entry.target.dataset.index);
+                    const vid = entry.target.dataset.vid;
+                    const playerId = `reel-player-${index}`;
+
+                    if (entry.isIntersecting) {
+                        // Play if exists, or initialize new
+                        if (reelPlayers[index]) {
+                            try { reelPlayers[index].playVideo(); } catch(e){}
+                        } else {
+                            initReelPlayer(index, vid, playerId, true);
                         }
+
+                        // Preload Next
+                        if (currentShortsList[index + 1] && !reelPlayers[index + 1]) {
+                            initReelPlayer(index + 1, currentShortsList[index + 1].videoId, `reel-player-${index + 1}`, false);
+                        }
+
+                        // Destroy Faraway players to save Memory (Hacker Mindset!)
+                        Object.keys(reelPlayers).forEach(key => {
+                            const k = parseInt(key);
+                            if (Math.abs(k - index) > 1) { // Keep only Current, Prev, Next
+                                if (reelPlayers[k] && typeof reelPlayers[k].destroy === 'function') {
+                                    reelPlayers[k].destroy();
+                                }
+                                delete reelPlayers[k];
+                                
+                                // Restore Div container so it can be re-created if scrolled back
+                                const itemContainer = document.getElementById(`reel-item-${k}`);
+                                if (itemContainer) {
+                                    const overlay = itemContainer.querySelector('.reel-overlay');
+                                    const playerDiv = document.createElement('div');
+                                    playerDiv.id = `reel-player-${k}`;
+                                    playerDiv.style.width = '100%';
+                                    playerDiv.style.height = '100%';
+                                    if(overlay) itemContainer.insertBefore(playerDiv, overlay);
+                                }
+                            }
+                        });
+
+                        // Auto-fetch more shorts if we reached the bottom
+                        if (index === currentShortsList.length - 2 && shortsHasMore && !shortsLoading) {
+                            loadMoreShorts();
+                        }
+
+                    } else {
+                        // Pause if going out of view
+                        if (reelPlayers[index]) {
+                            try { reelPlayers[index].pauseVideo(); } catch(e){}
+                        }
+                    }
+                });
+            }, { threshold: 0.6 }); // 60% of video must be visible to trigger
+
+            function initReelPlayer(index, vid, playerId, autoplay) {
+                reelPlayers[index] = new YT.Player(playerId, {
+                    height: '100%', width: '100%', videoId: vid,
+                    playerVars: { 
+                        autoplay: autoplay ? 1 : 0, controls: 0, modestbranding: 1, 
+                        rel: 0, fs: 0, loop: 1, playlist: vid, playsinline: 1 
+                    },
+                    events: {
+                        onReady: (e) => { if(autoplay) e.target.playVideo(); }
                     }
                 });
             }
 
-            function closePlayer() {
-                playerModal.classList.remove('active');
-                if (ytPlayer) { ytPlayer.stopVideo(); ytPlayer.destroy(); ytPlayer = null; }
-                playerContainer.innerHTML = '';
+            function appendReelItem(shortData, index) {
+                const item = document.createElement('div');
+                item.className = 'reel-item';
+                item.id = `reel-item-${index}`;
+                item.dataset.index = index;
+                item.dataset.vid = shortData.videoId;
+                item.innerHTML = `
+                    <div id="reel-player-${index}" style="width:100%; height:100%;"></div>
+                    <div class="reel-overlay">
+                        <div class="reel-title">${shortData.title}</div>
+                        <div class="reel-author">@${shortData.author}</div>
+                    </div>
+                `;
+                reelsModal.appendChild(item);
+                reelObserver.observe(item);
             }
 
-            backBtn.onclick = closePlayer;
-            playerModal.addEventListener('click', (e) => { if (e.target === playerModal) closePlayer(); });
+            function openReelsViewer(startIndex) {
+                reelsModal.innerHTML = ''; // Clear old
+                reelsModal.classList.add('active');
+                reelsCloseBtn.classList.add('active');
 
-            searchBtn.onclick = () => {
-                const q = searchInput.value.trim();
-                if (q) { chips.forEach(c => c.classList.remove('active')); loadHome(q, 'search'); }
+                // Build full scrollable list
+                currentShortsList.forEach((short, idx) => appendReelItem(short, idx));
+
+                // Instantly Jump to the clicked short
+                setTimeout(() => {
+                    const target = document.getElementById(`reel-item-${startIndex}`);
+                    if(target) target.scrollIntoView({ behavior: 'instant' }); 
+                }, 50);
+            }
+
+            function closeReelsViewer() {
+                reelsModal.classList.remove('active');
+                reelsCloseBtn.classList.remove('active');
+                
+                // Destroy all YT Instances to stop audio
+                Object.values(reelPlayers).forEach(p => {
+                    if(typeof p.destroy === 'function') p.destroy();
+                });
+                reelPlayers = {};
+                reelsModal.innerHTML = '';
+            }
+
+            reelsCloseBtn.onclick = closeReelsViewer;
+            // =========================================
+
+            // --- STANDARD PLAYER (HOME VIDEOS) ---
+            function openPlayer(videoId) {
+                const playerModal = document.getElementById('player-modal');
+                const playerContainer = document.getElementById('player-container');
+                playerModal.classList.add('active');
+                document.getElementById('loading-spinner').style.display = 'block';
+                playerContainer.innerHTML = '';
+                
+                if (ytPlayer) { ytPlayer.destroy(); ytPlayer = null; }
+                
+                ytPlayer = new YT.Player(playerContainer, {
+                    height: '100%', width: '100%', videoId,
+                    playerVars: { autoplay: 1, modestbranding: 1, rel: 0, controls: 1, showinfo: 0, iv_load_policy: 3, fs: 1, playsinline: 1 },
+                    events: {
+                        onReady: () => { document.getElementById('loading-spinner').style.display = 'none'; }
+                    }
+                });
+            }
+
+            document.getElementById('back-btn').onclick = () => {
+                document.getElementById('player-modal').classList.remove('active');
+                if (ytPlayer) { ytPlayer.stopVideo(); ytPlayer.destroy(); ytPlayer = null; }
             };
-            searchInput.addEventListener('keypress', e => { if (e.key === 'Enter') searchBtn.click(); });
+
+            // Chips & Search
+            document.getElementById('search-btn').onclick = () => {
+                const q = document.getElementById('search-input').value.trim();
+                if (q) { 
+                    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active')); 
+                    loadHome(q, 'search'); 
+                }
+            };
             
-            chips.forEach(chip => {
+            document.querySelectorAll('.chip').forEach(chip => {
                 chip.onclick = () => {
-                    chips.forEach(c => c.classList.remove('active'));
+                    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
                     chip.classList.add('active');
                     const q = chip.dataset.query;
                     const t = (q === 'trending') ? 'home' : 'search';
                     loadHome(q, t);
-                    searchInput.value = '';
                 };
             });
 
-            document.querySelector('.nav-item[data-page="home"]').addEventListener('click', () => {
-                chips.forEach(c => c.classList.remove('active'));
-                document.querySelector('.chip[data-query="trending"]').classList.add('active');
-                loadHome('trending', 'home');
-                searchInput.value = '';
-            });
         })();
     </script>
 </body>
