@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name='admaven-placement' content='Bqjs6pjs8'>
     <meta name="theme-color" content="#0a0a0a">
-    <title>Auraa Pro – Reels & Ad-Free</title>
+    <title>Auraa Pro – Simple & Ad-Free</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
         :root { --bg: #0a0a0a; --surface: rgba(20, 20, 20, 0.9); --text: #ffffff; --muted: #aaaaaa; --accent: #00ff7f; --gradient: linear-gradient(135deg, #004d40, #00e676); --safe-bottom: env(safe-area-inset-bottom, 0px); }
@@ -39,11 +39,9 @@
         .chip.active { background: rgba(0,255,127,0.15); color: var(--accent); border-color: var(--accent); }
         
         .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; padding: 0 16px 20px; }
-        .shorts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; padding: 0 16px 20px; }
         .video-card { background: rgba(30,30,30,0.8); backdrop-filter: blur(12px); border-radius: 16px; overflow: hidden; cursor: pointer; transition: transform 0.3s; border: 1px solid rgba(255,255,255,0.05); }
         .video-card:active { transform: scale(0.96); border-color: var(--accent); }
         .thumbnail-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; }
-        .shorts-grid .thumbnail-wrapper { aspect-ratio: 9/16; } /* Make shorts thumbnails vertical */
         .thumbnail-wrapper img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
         .duration-badge { position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; }
         .video-info { padding: 10px 12px; }
@@ -55,50 +53,32 @@
         .loading-indicator.show { display: block; }
         .no-results { grid-column: 1/-1; text-align: center; color: #888; padding: 40px; }
 
-        /* General Video Player Modal */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        /* ========================================= */
+        /* CUSTOM PLAYER JUGAAD (No Youtube Branding)*/
+        /* ========================================= */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); display: flex; align-items: center; justify-content: center; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .modal-overlay.active { opacity: 1; pointer-events: all; }
-        .modal-content { position: relative; width: 95%; max-width: 900px; aspect-ratio: 16/9; background: #000; border-radius: 20px; overflow: hidden; box-shadow: 0 0 60px rgba(0,255,127,0.3); }
-        #player-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        .back-btn { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: 0.2s; }
+        .modal-content { position: relative; width: 100%; max-width: 900px; aspect-ratio: 16/9; background: #000; border-radius: 20px; overflow: hidden; box-shadow: 0 0 60px rgba(0,255,127,0.2); }
         
-        /* ========================================= */
-        /* INSTAGRAM REELS VIEWER (Scroll Snap UI)   */
-        /* ========================================= */
-        .reels-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
-            background: #000; z-index: 9000; display: none;
-            overflow-y: scroll; scroll-snap-type: y mandatory;
-        }
-        .reels-modal.active { display: block; }
-        .reels-modal::-webkit-scrollbar { display: none; } /* Hide scrollbar for clean look */
+        #yt-iframe-wrapper { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
         
-        .reel-item {
-            width: 100%; height: 100vh; scroll-snap-align: start;
-            position: relative; background: #111;
-            display: flex; justify-content: center; align-items: center;
-            overflow: hidden;
-        }
+        /* This overlay blocks all clicks from reaching the Youtube logo/title */
+        .click-overlay { position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 50px); z-index: 5; cursor: pointer; }
         
-        .reels-close {
-            position: fixed; top: env(safe-area-inset-top, 20px); left: 20px; z-index: 9100;
-            background: rgba(0,0,0,0.6); color: white; border: none; backdrop-filter: blur(5px);
-            width: 45px; height: 45px; border-radius: 50%; font-size: 1.5rem;
-            display: none; cursor: pointer; align-items: center; justify-content: center;
-        }
-        .reels-close.active { display: flex; }
-
-        .reel-overlay {
-            position: absolute; bottom: calc(20px + var(--safe-bottom)); left: 20px; right: 70px;
-            z-index: 5; pointer-events: none;
-            background: linear-gradient(transparent, rgba(0,0,0,0.8));
-            padding: 20px 10px 10px 0; border-radius: 10px;
-        }
-        .reel-title { color: #fff; font-size: 1rem; font-weight: bold; margin-bottom: 6px; text-shadow: 1px 1px 3px #000; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .reel-author { color: var(--accent); font-size: 0.9rem; text-shadow: 1px 1px 3px #000; font-weight: bold; }
+        .player-controls { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.95)); padding: 15px 20px 10px; display: flex; flex-direction: column; gap: 12px; z-index: 10; }
+        
+        .progress-area { width: 100%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 4px; cursor: pointer; position: relative; }
+        .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; width: 0%; pointer-events: none; transition: width 0.1s linear; }
+        
+        .controls-row { display: flex; justify-content: space-between; align-items: center; }
+        .ctrl-btn { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0 10px; display: flex; align-items: center; }
+        .ctrl-btn:active { color: var(--accent); transform: scale(0.9); }
+        
+        .back-btn { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.2); color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 15; transition: 0.2s; backdrop-filter: blur(5px); }
+        .back-btn:active { background: var(--accent); color: black; }
         /* ========================================= */
 
-        .loading-spinner { border: 4px solid #333; border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2; }
+        .loading-spinner { border: 4px solid #333; border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 20; display: none; }
         @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
         
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(20,20,20,0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; padding: 8px 0 calc(8px + var(--safe-bottom)); z-index: 150; }
@@ -161,20 +141,12 @@
             <div class="chip" data-query="news">News</div>
         </div>
 
-        <!-- Home Page -->
+        <!-- Home Page (Only videos, Shorts removed) -->
         <div id="home-page" class="page active-page">
             <div class="video-grid" id="video-grid">
                 <div id="sentinel" class="sentinel"></div>
             </div>
             <div id="loading-indicator" class="loading-indicator">Loading...</div>
-        </div>
-
-        <!-- Shorts Page (Grid view before clicking) -->
-        <div id="shorts-page" class="page">
-            <div class="shorts-grid" id="shorts-grid">
-                <div id="shorts-sentinel" class="sentinel"></div>
-            </div>
-            <div id="shorts-loading-indicator" class="loading-indicator">Loading shorts...</div>
         </div>
 
         <!-- Wallet Page -->
@@ -202,18 +174,34 @@
             <button class="recharge-btn" style="margin-top:16px;background:#ff4757;" onclick="logout()">Logout</button>
         </div>
 
-        <!-- General Video Player Modal (For Home Videos) -->
+        <!-- Custom Video Player Modal -->
         <div class="modal-overlay" id="player-modal">
-            <div class="modal-content">
+            <div class="modal-content" id="modal-content-area">
+                <!-- Wrapper for iframe so we can wipe it safely -->
+                <div id="yt-iframe-wrapper">
+                    <div id="player-container"></div>
+                </div>
+                
                 <button class="back-btn" id="back-btn">←</button>
-                <div id="player-container"></div>
+                
+                <!-- The Invisible Click Shield -->
+                <div class="click-overlay" id="click-overlay"></div>
+                
+                <!-- Custom Control Bar -->
+                <div class="player-controls" id="custom-controls">
+                    <div class="progress-area" id="progress-area">
+                        <div class="progress-bar-fill" id="progress-bar-fill"></div>
+                    </div>
+                    <div class="controls-row">
+                        <button class="ctrl-btn" id="play-pause-btn">⏸</button>
+                        <span id="time-display" style="font-size:0.9rem; color:#ccc;">0:00 / 0:00</span>
+                        <button class="ctrl-btn" id="fullscreen-btn">⛶</button>
+                    </div>
+                </div>
+
                 <div class="loading-spinner" id="loading-spinner"></div>
             </div>
         </div>
-
-        <!-- Instagram Style REELS VIEWER (For Shorts) -->
-        <div id="reels-modal" class="reels-modal"></div>
-        <button id="reels-close" class="reels-close">←</button>
 
         <!-- Help Modal -->
         <div class="modal-overlay" id="help-modal" style="z-index:400;">
@@ -221,19 +209,17 @@
                 <button style="position:absolute;top:15px;right:20px;background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;" onclick="closeHelp()">&times;</button>
                 <h3 style="color:var(--accent);margin-bottom:15px;">❓ Help & Features</h3>
                 <div class="help-content">
-                    <p>📺 <b>Videos:</b> Browse and search any content.</p>
+                    <p>📺 <b>Videos:</b> Browse and search any content safely without ads.</p>
                     <p>💰 <b>Wallet:</b> Earn MB by watching videos. 1000 MB = Free Recharge.</p>
-                    <p>🎬 <b>Reels:</b> Swipe up/down to watch infinite shorts, just like Instagram.</p>
                 </div>
             </div>
         </div>
 
+        <!-- Updated Bottom Nav (Removed Shorts) -->
         <div class="bottom-nav">
             <div class="nav-item active" data-page="home"><span>🏠</span><br>Home</div>
-            <div class="nav-item" data-page="shorts"><span>🎬</span><br>Shorts</div>
             <div class="nav-item" data-page="wallet"><span>💼</span><br>Wallet</div>
             <div class="nav-item" data-page="profile"><span>👤</span><br>Profile</div>
-            <!-- Admin link -->
             <div class="nav-item" onclick="window.open('https://instagram.com/ip_thakur_1')"><span>👑</span><br>Admin</div>
         </div>
     </div>
@@ -247,23 +233,14 @@
 
             let user = null, ytPlayer = null;
             let homePage = 1, homeQuery = 'trending', homeType = 'home';
-            let shortsPage = 1, shortsQuery = 'shorts', shortsType = 'shorts';
             let homeLoading = false, homeHasMore = true;
-            let shortsLoading = false, shortsHasMore = true;
             const homeRendered = new Set();
-            const shortsRendered = new Set();
-            
-            // Array to store all loaded shorts data for the Swiper
-            let currentShortsList = [];
+            let progressInterval;
 
             // DOM refs
             const appContainer = document.getElementById('app-container');
             const homeGrid = document.getElementById('video-grid');
             const homeSentinel = document.getElementById('sentinel');
-            const shortsGrid = document.getElementById('shorts-grid');
-            const shortsSentinel = document.getElementById('shorts-sentinel');
-            const reelsModal = document.getElementById('reels-modal');
-            const reelsCloseBtn = document.getElementById('reels-close');
 
             // --- AUTH LOGIC ---
             let authMode = 'login';
@@ -315,7 +292,6 @@
 
             async function initApp() {
                 loadHome('trending', 'home');
-                loadShorts();
                 setupNav();
             }
 
@@ -331,24 +307,16 @@
                         const p = n.dataset.page;
                         pages.forEach(px => px.classList.remove('active-page'));
                         document.getElementById(p + '-page').classList.add('active-page');
-                        // Close reels if open when navigating
-                        closeReelsViewer();
                     };
                 });
             }
 
-            // --- INFINITE SCROLL OBSERVERS ---
+            // --- HOME VIDEOS LOGIC ---
             const homeObserver = new IntersectionObserver(entries => {
                 if (entries[0].isIntersecting && !homeLoading && homeHasMore) loadMoreHome();
             }, { rootMargin: '100px' });
             homeObserver.observe(homeSentinel);
 
-            const shortsObserver = new IntersectionObserver(entries => {
-                if (entries[0].isIntersecting && !shortsLoading && shortsHasMore) loadMoreShorts();
-            }, { rootMargin: '100px' });
-            shortsObserver.observe(shortsSentinel);
-
-            // --- HOME VIDEOS LOGIC ---
             function loadHome(q, t) {
                 homeQuery = q; homeType = t; homePage = 1; homeHasMore = true;
                 homeRendered.clear();
@@ -375,7 +343,7 @@
                         data.results.forEach(v => {
                             if (!homeRendered.has(v.videoId)) {
                                 homeRendered.add(v.videoId);
-                                const card = createCard(v, 'home');
+                                const card = createCard(v);
                                 homeGrid.insertBefore(card, homeSentinel);
                             }
                         });
@@ -392,72 +360,10 @@
             }
             function loadMoreHome() { fetchHomeVideos(true); }
 
-            // --- SHORTS VIDEOS LOGIC ---
-            function loadShorts() {
-                shortsQuery = 'shorts'; shortsType = 'shorts'; shortsPage = 1; shortsHasMore = true;
-                shortsRendered.clear();
-                currentShortsList = []; // Reset shorts array
-                shortsGrid.querySelectorAll('.video-card,.no-results').forEach(e => e.remove());
-                fetchShortsVideos(false);
-            }
-
-            async function fetchShortsVideos(append = false) {
-                if (shortsLoading) return;
-                shortsLoading = true;
-                document.getElementById('shorts-loading-indicator').classList.add('show');
-                try {
-                    const res = await fetch(`${API}/videos?q=shorts&type=shorts&page=${shortsPage}`);
-                    const data = await res.json();
-                    
-                    if (!append) {
-                        shortsGrid.querySelectorAll('.video-card,.no-results').forEach(e => e.remove());
-                        shortsRendered.clear();
-                        currentShortsList = [];
-                    }
-                    if (!data.results || data.results.length === 0) {
-                        shortsHasMore = false;
-                        if (!append) shortsGrid.insertAdjacentHTML('beforeend', '<div class="no-results">No shorts found.</div>');
-                    } else {
-                        data.results.forEach(v => {
-                            if (!shortsRendered.has(v.videoId)) {
-                                shortsRendered.add(v.videoId);
-                                
-                                const currentIndex = currentShortsList.length;
-                                currentShortsList.push(v); // Save to array for reels
-                                
-                                const card = createCard(v, 'shorts', currentIndex);
-                                shortsGrid.insertBefore(card, shortsSentinel);
-                                
-                                // If Reels viewer is currently active, dynamically add new shorts to it
-                                if (reelsModal.classList.contains('active')) {
-                                    appendReelItem(v, currentIndex);
-                                }
-                            }
-                        });
-                        shortsHasMore = data.results.length >= 10;
-                        if (shortsHasMore) shortsPage++;
-                    }
-                } catch (e) {
-                    if (!append) shortsGrid.insertAdjacentHTML('beforeend', `<div class="no-results">❌ Error loading</div>`);
-                    shortsHasMore = false;
-                } finally {
-                    shortsLoading = false;
-                    document.getElementById('shorts-loading-indicator').classList.remove('show');
-                }
-            }
-            function loadMoreShorts() { fetchShortsVideos(true); }
-
-            // --- UI CREATION ---
-            function createCard(v, pageType, index = 0) {
+            function createCard(v) {
                 const card = document.createElement('div');
                 card.className = 'video-card animate-in';
-                card.onclick = () => {
-                    if(pageType === 'shorts') {
-                        openReelsViewer(index); // Open Instagram style UI
-                    } else {
-                        openPlayer(v.videoId); // Open standard YT UI
-                    }
-                };
+                card.onclick = () => openPlayer(v.videoId);
                 card.innerHTML = `
                     <div class="thumbnail-wrapper"><img src="${v.thumbnail}" loading="lazy"><span class="duration-badge">${v.duration || '0:00'}</span></div>
                     <div class="video-info"><div class="video-title">${v.title}</div><div class="video-channel">${v.author}</div></div>
@@ -466,149 +372,110 @@
             }
 
             // =========================================
-            // INSTAGRAM REELS (SCROLLING SHORTS) LOGIC
+            // CUSTOM PLAYER LOGIC
             // =========================================
-            let reelPlayers = {}; // Keep track of active YT iframes
-            
-            // Intersection Observer detects which reel is currently visible on screen
-            const reelObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    const index = parseInt(entry.target.dataset.index);
-                    const vid = entry.target.dataset.vid;
-                    const playerId = `reel-player-${index}`;
-
-                    if (entry.isIntersecting) {
-                        // Play if exists, or initialize new
-                        if (reelPlayers[index]) {
-                            try { reelPlayers[index].playVideo(); } catch(e){}
-                        } else {
-                            initReelPlayer(index, vid, playerId, true);
-                        }
-
-                        // Preload Next
-                        if (currentShortsList[index + 1] && !reelPlayers[index + 1]) {
-                            initReelPlayer(index + 1, currentShortsList[index + 1].videoId, `reel-player-${index + 1}`, false);
-                        }
-
-                        // Destroy Faraway players to save Memory (Hacker Mindset!)
-                        Object.keys(reelPlayers).forEach(key => {
-                            const k = parseInt(key);
-                            if (Math.abs(k - index) > 1) { // Keep only Current, Prev, Next
-                                if (reelPlayers[k] && typeof reelPlayers[k].destroy === 'function') {
-                                    reelPlayers[k].destroy();
-                                }
-                                delete reelPlayers[k];
-                                
-                                // Restore Div container so it can be re-created if scrolled back
-                                const itemContainer = document.getElementById(`reel-item-${k}`);
-                                if (itemContainer) {
-                                    const overlay = itemContainer.querySelector('.reel-overlay');
-                                    const playerDiv = document.createElement('div');
-                                    playerDiv.id = `reel-player-${k}`;
-                                    playerDiv.style.width = '100%';
-                                    playerDiv.style.height = '100%';
-                                    if(overlay) itemContainer.insertBefore(playerDiv, overlay);
-                                }
-                            }
-                        });
-
-                        // Auto-fetch more shorts if we reached the bottom
-                        if (index === currentShortsList.length - 2 && shortsHasMore && !shortsLoading) {
-                            loadMoreShorts();
-                        }
-
-                    } else {
-                        // Pause if going out of view
-                        if (reelPlayers[index]) {
-                            try { reelPlayers[index].pauseVideo(); } catch(e){}
-                        }
-                    }
-                });
-            }, { threshold: 0.6 }); // 60% of video must be visible to trigger
-
-            function initReelPlayer(index, vid, playerId, autoplay) {
-                reelPlayers[index] = new YT.Player(playerId, {
-                    height: '100%', width: '100%', videoId: vid,
-                    playerVars: { 
-                        autoplay: autoplay ? 1 : 0, controls: 0, modestbranding: 1, 
-                        rel: 0, fs: 0, loop: 1, playlist: vid, playsinline: 1 
-                    },
-                    events: {
-                        onReady: (e) => { if(autoplay) e.target.playVideo(); }
-                    }
-                });
+            function formatTime(seconds) {
+                if (!seconds) return "0:00";
+                let m = Math.floor(seconds / 60);
+                let s = Math.floor(seconds % 60);
+                return m + ":" + (s < 10 ? "0" : "") + s;
             }
 
-            function appendReelItem(shortData, index) {
-                const item = document.createElement('div');
-                item.className = 'reel-item';
-                item.id = `reel-item-${index}`;
-                item.dataset.index = index;
-                item.dataset.vid = shortData.videoId;
-                item.innerHTML = `
-                    <div id="reel-player-${index}" style="width:100%; height:100%;"></div>
-                    <div class="reel-overlay">
-                        <div class="reel-title">${shortData.title}</div>
-                        <div class="reel-author">@${shortData.author}</div>
-                    </div>
-                `;
-                reelsModal.appendChild(item);
-                reelObserver.observe(item);
+            function updateProgress() {
+                if (!ytPlayer || !ytPlayer.getCurrentTime) return;
+                const cur = ytPlayer.getCurrentTime();
+                const dur = ytPlayer.getDuration();
+                if (dur > 0) {
+                    document.getElementById('progress-bar-fill').style.width = ((cur / dur) * 100) + '%';
+                    document.getElementById('time-display').innerText = formatTime(cur) + ' / ' + formatTime(dur);
+                }
             }
 
-            function openReelsViewer(startIndex) {
-                reelsModal.innerHTML = ''; // Clear old
-                reelsModal.classList.add('active');
-                reelsCloseBtn.classList.add('active');
-
-                // Build full scrollable list
-                currentShortsList.forEach((short, idx) => appendReelItem(short, idx));
-
-                // Instantly Jump to the clicked short
-                setTimeout(() => {
-                    const target = document.getElementById(`reel-item-${startIndex}`);
-                    if(target) target.scrollIntoView({ behavior: 'instant' }); 
-                }, 50);
-            }
-
-            function closeReelsViewer() {
-                reelsModal.classList.remove('active');
-                reelsCloseBtn.classList.remove('active');
-                
-                // Destroy all YT Instances to stop audio
-                Object.values(reelPlayers).forEach(p => {
-                    if(typeof p.destroy === 'function') p.destroy();
-                });
-                reelPlayers = {};
-                reelsModal.innerHTML = '';
-            }
-
-            reelsCloseBtn.onclick = closeReelsViewer;
-            // =========================================
-
-            // --- STANDARD PLAYER (HOME VIDEOS) ---
             function openPlayer(videoId) {
                 const playerModal = document.getElementById('player-modal');
-                const playerContainer = document.getElementById('player-container');
                 playerModal.classList.add('active');
                 document.getElementById('loading-spinner').style.display = 'block';
-                playerContainer.innerHTML = '';
                 
-                if (ytPlayer) { ytPlayer.destroy(); ytPlayer = null; }
+                // Clear the old iframe completely so no old UI leaks
+                document.getElementById('yt-iframe-wrapper').innerHTML = '<div id="player-container"></div>';
                 
-                ytPlayer = new YT.Player(playerContainer, {
+                if (ytPlayer) { ytPlayer.destroy(); ytPlayer = null; clearInterval(progressInterval); }
+                
+                ytPlayer = new YT.Player('player-container', {
                     height: '100%', width: '100%', videoId,
-                    playerVars: { autoplay: 1, modestbranding: 1, rel: 0, controls: 1, showinfo: 0, iv_load_policy: 3, fs: 1, playsinline: 1 },
+                    playerVars: { 
+                        autoplay: 1, 
+                        controls: 0, /* HIDES ALL YOUTUBE UI */
+                        disablekb: 1, 
+                        fs: 0, 
+                        modestbranding: 1, 
+                        rel: 0, 
+                        showinfo: 0, 
+                        playsinline: 1,
+                        iv_load_policy: 3
+                    },
                     events: {
-                        onReady: () => { document.getElementById('loading-spinner').style.display = 'none'; }
+                        onReady: () => { 
+                            document.getElementById('loading-spinner').style.display = 'none';
+                            progressInterval = setInterval(updateProgress, 500);
+                        },
+                        onStateChange: (e) => {
+                            if (e.data === YT.PlayerState.PLAYING) {
+                                document.getElementById('play-pause-btn').innerText = '⏸';
+                            } else if (e.data === YT.PlayerState.PAUSED) {
+                                document.getElementById('play-pause-btn').innerText = '▶';
+                            }
+                        }
                     }
                 });
             }
 
-            document.getElementById('back-btn').onclick = () => {
+            function closePlayer() {
                 document.getElementById('player-modal').classList.remove('active');
                 if (ytPlayer) { ytPlayer.stopVideo(); ytPlayer.destroy(); ytPlayer = null; }
+                clearInterval(progressInterval);
+                document.getElementById('yt-iframe-wrapper').innerHTML = '';
+            }
+
+            // Custom Controls interactions
+            document.getElementById('back-btn').onclick = closePlayer;
+            
+            function togglePlay() {
+                if(!ytPlayer) return;
+                const state = ytPlayer.getPlayerState();
+                if (state === YT.PlayerState.PLAYING) {
+                    ytPlayer.pauseVideo();
+                } else {
+                    ytPlayer.playVideo();
+                }
+            }
+            
+            // Clicking the glass shield plays/pauses the video without triggering youtube
+            document.getElementById('click-overlay').onclick = togglePlay;
+            document.getElementById('play-pause-btn').onclick = togglePlay;
+
+            // Clicking the custom progress bar to seek
+            document.getElementById('progress-area').onclick = (e) => {
+                if(!ytPlayer) return;
+                const rect = e.target.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const percentage = clickX / rect.width;
+                const dur = ytPlayer.getDuration();
+                ytPlayer.seekTo(dur * percentage, true);
             };
+
+            // Fullscreen custom wrapper
+            document.getElementById('fullscreen-btn').onclick = () => {
+                const wrapper = document.getElementById('modal-content-area');
+                if (!document.fullscreenElement) {
+                    if(wrapper.requestFullscreen) wrapper.requestFullscreen();
+                    else if(wrapper.webkitRequestFullscreen) wrapper.webkitRequestFullscreen();
+                } else {
+                    if(document.exitFullscreen) document.exitFullscreen();
+                    else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+                }
+            };
+            // =========================================
 
             // Chips & Search
             document.getElementById('search-btn').onclick = () => {
