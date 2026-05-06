@@ -115,17 +115,21 @@
             <div class="chip" data-query="news">News</div>
         </div>
 
-        <!-- Home Page -->
+        <!-- Home Page (FIXED SENTINEL NESTING) -->
         <div id="home-page" class="page active-page">
-            <div class="video-grid" id="video-grid"></div>
-            <div id="sentinel" class="sentinel"></div>
+            <div class="video-grid" id="video-grid">
+                <!-- Sentinel inside the grid so insertBefore works -->
+                <div id="sentinel" class="sentinel"></div>
+            </div>
             <div id="loading-indicator" class="loading-indicator">Loading...</div>
         </div>
 
-        <!-- Shorts Page -->
+        <!-- Shorts Page (FIXED SENTINEL NESTING) -->
         <div id="shorts-page" class="page">
-            <div class="shorts-grid" id="shorts-grid"></div>
-            <div id="shorts-sentinel" class="sentinel"></div>
+            <div class="shorts-grid" id="shorts-grid">
+                <!-- Sentinel inside the grid so insertBefore works -->
+                <div id="shorts-sentinel" class="sentinel"></div>
+            </div>
             <div id="shorts-loading-indicator" class="loading-indicator">Loading shorts...</div>
         </div>
 
@@ -183,7 +187,6 @@
             <div class="nav-item" data-page="shorts"><span>🎬</span><br>Shorts</div>
             <div class="nav-item" data-page="wallet"><span>💼</span><br>Wallet</div>
             <div class="nav-item" data-page="profile"><span>👤</span><br>Profile</div>
-            <!-- Admin link as requested -->
             <div class="nav-item" onclick="window.open('https://instagram.com/ip_thakur_1')"><span>👑</span><br>Admin</div>
         </div>
     </div>
@@ -191,7 +194,6 @@
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
         (function(){
-            // Backend URL - Make sure Railway link is live!
             const API = 'https://becend-production.up.railway.app/api';  
 
             let user = null, ytPlayer = null;
@@ -202,7 +204,6 @@
             const homeRendered = new Set();
             const shortsRendered = new Set();
 
-            // DOM refs
             const authOverlay = document.getElementById('auth-overlay');
             const authTitle = document.getElementById('auth-title');
             const authName = document.getElementById('auth-name');
@@ -239,7 +240,6 @@
             const profileMb = document.getElementById('profile-mb');
             const profileRechargeStatus = document.getElementById('profile-recharge-status');
 
-            // Auth Logic
             let authMode = 'login';
             toggleAuth.onclick = () => {
                 authMode = authMode === 'login' ? 'signup' : 'login';
@@ -361,7 +361,7 @@
             function setupNav() {
                 navItems.forEach(n => {
                     n.onclick = () => {
-                        if(n.getAttribute('data-page') == null) return; // Ignore external links
+                        if(n.getAttribute('data-page') == null) return;
                         navItems.forEach(x => x.classList.remove('active'));
                         n.classList.add('active');
                         const p = n.dataset.page;
@@ -372,7 +372,6 @@
                 });
             }
 
-            // Infinite scroll
             const homeObserver = new IntersectionObserver(entries => {
                 if (entries[0].isIntersecting && !homeLoading && homeHasMore) loadMoreHome();
             }, { rootMargin: '100px' });
@@ -482,7 +481,6 @@
                 return card;
             }
 
-            // Player Setup
             function openPlayer(videoId) {
                 playerModal.classList.add('active');
                 loadingSpinner.style.display = 'block';
@@ -496,7 +494,7 @@
                         onReady: () => { loadingSpinner.style.display = 'none'; },
                         onStateChange: (e) => {
                             if (e.data === YT.PlayerState.ENDED) {
-                                // Auto-play next logic can be plugged here
+                                // Auto-play next logic here
                             }
                         }
                     }
@@ -535,7 +533,6 @@
                 loadHome('trending', 'home');
                 searchInput.value = '';
             });
-
         })();
     </script>
 </body>
